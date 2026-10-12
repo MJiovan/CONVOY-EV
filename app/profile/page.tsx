@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowRight, Banknote, CloudSun, HeartPulse, Languages, Map, Wifi } from "lucide-react";
 import { StepBar } from "@/components/StepBar";
 import { Disclaimer } from "@/components/Disclaimer";
@@ -11,14 +10,19 @@ import type { VeteranProfile } from "@/types";
 import { FlowLoading } from "@/components/FlowLoading";
 
 export default function ProfilePage() {
-  const router = useRouter();
   const [profile, setProfile] = useState<VeteranProfile>(defaultProfile);
   const [ready, setReady] = useState(false);
   useEffect(() => { const timer = window.setTimeout(() => { setProfile(loadProfile()); setReady(true); }, 0); return () => window.clearTimeout(timer); }, []);
   const totalIncome = profile.vaIncome + profile.otherIncome;
   const afterGoals = totalIncome - profile.currentExpenses - profile.savingsGoal;
   const setNumber = (key: keyof VeteranProfile, value: string) => setProfile(p => ({ ...p, [key]: Math.max(0, Number(value)) }));
-  const submit = (e: FormEvent) => { e.preventDefault(); saveProfile(profile); router.push("/matches"); };
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    saveProfile(profile);
+    // A native transition avoids the hosted runtime's stalled client-side route change.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.assign("/matches");
+  };
 
   if (!ready) return <FlowLoading active={0}/>;
   return <main className="min-h-screen bg-[#f6f7f3]"><StepBar active={0}/><section className="container-shell py-10 sm:py-14"><div className="mx-auto max-w-3xl"><p className="eyebrow">Your starting point</p><h1 className="mt-3 text-4xl font-bold tracking-[-.04em] text-[#17392f] sm:text-5xl">Build your veteran profile.</h1><p className="mt-4 max-w-2xl text-base leading-7 text-slate-500">Share the numbers and preferences that matter to you. This stays in your browser for this demonstration, and we never ask for medical information.</p>

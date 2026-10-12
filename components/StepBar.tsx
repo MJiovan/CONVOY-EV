@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useComparisonAvailability } from "@/hooks/use-comparison-availability";
 
 const steps = [
@@ -20,7 +19,7 @@ export function StepBar({ active }: { active: number }) {
       const canOpen = Boolean(step.href) && !isCurrent && ((isPast && index !== 2) || (index === 2 && canCompare));
       const content = <><span className={`grid h-6 w-6 place-items-center rounded-full text-[10px] ${index <= active ? "bg-[#d7f06b]" : "bg-slate-100"}`}>{index + 1}</span><span className="hidden sm:inline">{step.label}</span></>;
       return <div key={step.label} className="flex items-center">
-        {canOpen && step.href ? <Link href={step.href} className={`flex items-center gap-2 whitespace-nowrap text-xs font-bold uppercase tracking-[.12em] text-[#17392f] hover:text-[#77903b]`} aria-label={`Go to ${step.label}`}>{content}</Link> : <span aria-current={isCurrent ? "step" : undefined} aria-disabled={!isCurrent && !canOpen ? true : undefined} className={`flex items-center gap-2 whitespace-nowrap text-xs font-bold uppercase tracking-[.12em] ${index <= active ? "text-[#17392f]" : "text-slate-300"}`}>{content}</span>}
+        {canOpen && step.href ? <a href={step.href} className={`flex items-center gap-2 whitespace-nowrap text-xs font-bold uppercase tracking-[.12em] text-[#17392f] hover:text-[#77903b]`} aria-label={`Go to ${step.label}`}>{content}</a> : <span aria-current={isCurrent ? "step" : undefined} aria-disabled={!isCurrent && !canOpen ? true : undefined} className={`flex items-center gap-2 whitespace-nowrap text-xs font-bold uppercase tracking-[.12em] ${index <= active ? "text-[#17392f]" : "text-slate-300"}`}>{content}</span>}
         {index < steps.length-1 && <span className={`mx-3 h-px w-7 sm:mx-5 sm:w-12 ${index < active ? "bg-[#a9c333]" : "bg-slate-200"}`}/>} 
       </div>;
     })}

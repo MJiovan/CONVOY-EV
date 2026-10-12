@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, Pencil, SlidersHorizontal } from "lucide-react";
 import { CountryCard } from "@/components/CountryCard";
@@ -27,7 +26,7 @@ export default function MatchesPage() {
   if (!ready) return <FlowLoading active={1}/>;
   const canCompare = isValidComparison(selected);
   return <main className="min-h-screen bg-[#f6f7f3] pb-28"><StepBar active={1}/><section className="container-shell py-10 sm:py-14">
-    <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end"><div><p className="eyebrow">Personalized for your profile</p><h1 className="mt-3 text-4xl font-bold tracking-[-.04em] text-[#17392f] sm:text-5xl">Your country matches.</h1><p className="mt-4 max-w-2xl leading-7 text-slate-500">Ranked using your income, housing limit, savings goal, lifestyle preferences, and general residency feasibility.</p></div><Link href="/profile" className="btn-outline self-start"><Pencil size={15}/> Edit profile</Link></div>
+    <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end"><div><p className="eyebrow">Personalized for your profile</p><h1 className="mt-3 text-4xl font-bold tracking-[-.04em] text-[#17392f] sm:text-5xl">Your country matches.</h1><p className="mt-4 max-w-2xl leading-7 text-slate-500">Ranked using your income, housing limit, savings goal, lifestyle preferences, and general residency feasibility.</p></div><a href="/profile" className="btn-outline self-start"><Pencil size={15}/> Edit profile</a></div>
     <div className="mt-8 grid gap-3 rounded-[22px] bg-[#17392f] p-5 text-white sm:grid-cols-5"><ProfileStat label="Monthly income" value={formatCurrency(profile.vaIncome+profile.otherIncome)}/><ProfileStat label="Ongoing expenses" value={formatCurrency(profile.currentExpenses)}/><ProfileStat label="Savings goal" value={formatCurrency(profile.savingsGoal)}/><ProfileStat label="Housing max" value={formatCurrency(profile.housingBudget)}/><ProfileStat label="Preference" value={`${profile.region} · ${profile.climate}`}/></div>
     <div className="mt-6"><AlgorithmExplainer/></div>
     <div className="mt-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div className="flex items-center gap-2"><SlidersHorizontal size={17} className="text-[#799333]"/><p className="text-sm font-semibold text-slate-700">Best fit first · 5 demonstration destinations</p></div><p className="text-xs font-medium text-slate-400">Costs are illustrative monthly estimates</p></div>
@@ -35,7 +34,7 @@ export default function MatchesPage() {
     <div className="mt-6 grid gap-6 lg:grid-cols-2">{results.map(result=><CountryCard key={result.country.slug} result={result} selected={selected.includes(result.country.slug)} onToggle={()=>toggle(result.country.slug)}/>)}</div>
     <div className="mt-10"><Disclaimer/></div>
   </section>
-  {selected.length > 0 && <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-4 shadow-[0_-12px_40px_rgba(20,45,35,.1)] backdrop-blur-xl"><div className="container-shell flex items-center justify-between gap-4"><div><p className="text-sm font-bold text-[#17392f]">{selected.length} countr{selected.length===1?"y":"ies"} selected</p><p className="hidden text-xs text-slate-400 sm:block">{canCompare ? "Ready to compare side by side." : "Select one more country to compare."}</p></div>{canCompare ? <Link href="/compare" className="btn-lime">Compare selected <ArrowRight size={17}/></Link> : <button type="button" disabled className="btn-lime cursor-not-allowed opacity-45" aria-label="Select at least two countries to compare">Select one more</button>}</div></div>}
+  {selected.length > 0 && <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 p-4 shadow-[0_-12px_40px_rgba(20,45,35,.1)] backdrop-blur-xl"><div className="container-shell flex items-center justify-between gap-4"><div><p className="text-sm font-bold text-[#17392f]">{selected.length} countr{selected.length===1?"y":"ies"} selected</p><p className="hidden text-xs text-slate-400 sm:block">{canCompare ? "Ready to compare side by side." : "Select one more country to compare."}</p></div>{canCompare ? <a href="/compare" className="btn-lime">Compare selected <ArrowRight size={17}/></a> : <button type="button" disabled className="btn-lime cursor-not-allowed opacity-45" aria-label="Select at least two countries to compare">Select one more</button>}</div></div>}
   </main>;
 }
 

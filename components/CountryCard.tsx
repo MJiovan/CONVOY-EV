@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { AlertTriangle, Check, ChevronRight, CircleDollarSign, HeartPulse, Languages, Minus, Wifi } from "lucide-react";
 import { formatCurrency } from "@/lib/matching";
 import type { MatchResult } from "@/types";
@@ -15,7 +14,7 @@ export function CountryCard({ result, selected, onToggle }: { result: MatchResul
       <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl bg-[#f4f7f4] p-4"><Stat label="Est. living cost" value={formatCurrency(country.monthlyCost)}/><Stat label="Est. housing" value={formatCurrency(country.housingCost)}/><Stat label="Est. remaining" value={formatCurrency(result.remaining)} positive={result.remaining >= 0}/></div>
       <div className="mt-5 rounded-2xl border border-[#dfe7d7] bg-[#fbfcf8] p-4"><p className="text-[10px] font-extrabold uppercase tracking-[.14em] text-[#77903b]">How it fits your profile</p><ul className="mt-2 space-y-2">{result.reasons.map(reason=><li key={reason.text} className="flex gap-2 text-xs leading-5 text-slate-600"><FactorIcon tone={reason.tone}/><span>{reason.text}</span></li>)}</ul></div>
       <div className="mt-5 space-y-3 text-sm text-slate-600"><Info icon={<HeartPulse/>} label="Healthcare" value={`${country.healthcareScore}/100`}/><Info icon={<Languages/>} label="English" value={country.english}/><Info icon={<Wifi/>} label="Internet" value={country.internet}/><Info icon={<CircleDollarSign/>} label="Residency" value={country.residencyCategory}/></div>
-      <div className="mt-6 flex flex-col gap-2 sm:flex-row"><Link href={`/report/${country.slug}`} className="btn-dark flex-1 justify-center">View readiness report <ChevronRight size={16}/></Link><button type="button" aria-pressed={selected} aria-label={`${selected ? "Remove" : "Select"} ${country.name} ${selected ? "from" : "for"} comparison`} onClick={onToggle} className={`btn-outline justify-center ${selected ? "border-[#17392f] bg-[#edf3e8]" : ""}`}><span className={`grid h-4 w-4 place-items-center rounded border ${selected ? "border-[#17392f] bg-[#17392f] text-white" : "border-slate-300"}`}>{selected && <Check size={11}/>}</span>{selected ? "Selected" : "Compare"}</button></div>
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row"><a href={`/report/${country.slug}`} className="btn-dark flex-1 justify-center">View readiness report <ChevronRight size={16}/></a><button type="button" aria-pressed={selected} aria-label={`${selected ? "Remove" : "Select"} ${country.name} ${selected ? "from" : "for"} comparison`} onClick={onToggle} className={`btn-outline justify-center ${selected ? "border-[#17392f] bg-[#edf3e8]" : ""}`}><span className={`grid h-4 w-4 place-items-center rounded border ${selected ? "border-[#17392f] bg-[#17392f] text-white" : "border-slate-300"}`}>{selected && <Check size={11}/>}</span>{selected ? "Selected" : "Compare"}</button></div>
     </div>
   </article>;
 }
