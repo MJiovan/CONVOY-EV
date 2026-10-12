@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Banknote, CloudSun, HeartPulse, Languages, Map, PiggyBank, Wifi } from "lucide-react";
+import { ArrowRight, Banknote, CloudSun, HeartPulse, Languages, Map, Wifi } from "lucide-react";
 import { StepBar } from "@/components/StepBar";
 import { Disclaimer } from "@/components/Disclaimer";
 import { defaultProfile, formatCurrency } from "@/lib/matching";
@@ -12,7 +12,7 @@ import type { VeteranProfile } from "@/types";
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<VeteranProfile>(defaultProfile);
-  useEffect(() => setProfile(loadProfile()), []);
+  useEffect(() => { const timer = window.setTimeout(() => setProfile(loadProfile()), 0); return () => window.clearTimeout(timer); }, []);
   const totalIncome = profile.vaIncome + profile.otherIncome;
   const afterGoals = totalIncome - profile.currentExpenses - profile.savingsGoal;
   const setNumber = (key: keyof VeteranProfile, value: string) => setProfile(p => ({ ...p, [key]: Math.max(0, Number(value)) }));
@@ -21,8 +21,9 @@ export default function ProfilePage() {
   return <main className="min-h-screen bg-[#f6f7f3]"><StepBar active={0}/><section className="container-shell py-10 sm:py-14"><div className="mx-auto max-w-3xl"><p className="eyebrow">Your starting point</p><h1 className="mt-3 text-4xl font-bold tracking-[-.04em] text-[#17392f] sm:text-5xl">Build your veteran profile.</h1><p className="mt-4 max-w-2xl text-base leading-7 text-slate-500">Share the numbers and preferences that matter to you. This stays in your browser for this demonstration, and we never ask for medical information.</p>
     <form onSubmit={submit} className="mt-10 space-y-6">
       <FormSection number="01" icon={<Banknote/>} title="Monthly finances" description="Enter your typical monthly amounts in U.S. dollars.">
-        <div className="grid gap-5 sm:grid-cols-2"><MoneyInput label="VA disability compensation" value={profile.vaIncome} onChange={v=>setNumber("vaIncome",v)} hint="Monthly VA compensation"/><MoneyInput label="Other monthly income" value={profile.otherIncome} onChange={v=>setNumber("otherIncome",v)} hint="Pension, work, Social Security, etc."/><MoneyInput label="Current monthly expenses" value={profile.currentExpenses} onChange={v=>setNumber("currentExpenses",v)} hint="Your present total spending"/><MoneyInput label="Desired monthly savings" value={profile.savingsGoal} onChange={v=>setNumber("savingsGoal",v)} hint="What you want left for savings"/><MoneyInput label="Maximum housing budget" value={profile.housingBudget} onChange={v=>setNumber("housingBudget",v)} hint="Rent and basic housing costs"/></div>
-        <div className="mt-6 grid gap-3 rounded-2xl bg-[#17392f] p-5 text-white sm:grid-cols-3"><Summary label="Total monthly income" value={formatCurrency(totalIncome)}/><Summary label="Current expenses" value={formatCurrency(profile.currentExpenses)}/><Summary label="After expenses + goal" value={formatCurrency(afterGoals)} accent/></div>
+        <div className="grid gap-5 sm:grid-cols-2"><MoneyInput label="VA disability compensation" value={profile.vaIncome} onChange={v=>setNumber("vaIncome",v)} hint="Monthly VA compensation"/><MoneyInput label="Other monthly income" value={profile.otherIncome} onChange={v=>setNumber("otherIncome",v)} hint="Pension, work, Social Security, etc."/><MoneyInput label="Ongoing monthly expenses" value={profile.currentExpenses} onChange={v=>setNumber("currentExpenses",v)} hint="Debt, insurance, or obligations that continue after moving"/><MoneyInput label="Desired monthly savings" value={profile.savingsGoal} onChange={v=>setNumber("savingsGoal",v)} hint="What you want left after all monthly costs"/><MoneyInput label="Maximum housing budget" value={profile.housingBudget} onChange={v=>setNumber("housingBudget",v)} hint="Your target for rent and basic housing"/></div>
+        <div className="mt-6 grid gap-3 rounded-2xl bg-[#17392f] p-5 text-white sm:grid-cols-3"><Summary label="Total monthly income" value={formatCurrency(totalIncome)}/><Summary label="Ongoing expenses" value={formatCurrency(profile.currentExpenses)}/><Summary label="Available after expenses + goal" value={formatCurrency(afterGoals)} accent/></div>
+        <p className="mt-3 text-xs leading-5 text-slate-400">Destination living costs are subtracted separately on your results. This avoids treating rent abroad as one of your ongoing U.S. obligations.</p>
       </FormSection>
       <FormSection number="02" icon={<CloudSun/>} title="Where do you feel at home?" description="Preferences guide the lifestyle portion of your score.">
         <div className="grid gap-5 sm:grid-cols-2"><SelectInput label="Preferred climate" value={profile.climate} options={["Tropical","Warm","Temperate","Four seasons"]} onChange={v=>setProfile(p=>({...p,climate:v as VeteranProfile["climate"]}))}/><SelectInput label="Preferred region" value={profile.region} options={["Open to anywhere","Southeast Asia","Latin America","Europe"]} onChange={v=>setProfile(p=>({...p,region:v as VeteranProfile["region"]}))}/><SelectInput label="Community setting" value={profile.setting} options={["City","Suburban","Rural","Flexible"]} onChange={v=>setProfile(p=>({...p,setting:v as VeteranProfile["setting"]}))}/></div>

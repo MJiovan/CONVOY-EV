@@ -56,7 +56,10 @@ export interface ScoreBreakdown {
 export interface MatchResult {
   country: Country;
   score: number;
+  monthlyIncome: number;
+  availableAfterExpenses: number;
   remaining: number;
   status: "Strong Match" | "Possible Match" | "Needs More Research";
   breakdown: ScoreBreakdown;
+  reasons: string[];
 }
