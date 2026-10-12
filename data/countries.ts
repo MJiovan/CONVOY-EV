@@ -1,5 +1,14 @@
 import type { Country } from "@/types";
 
+const demoVeteranConsiderations = [
+  "Eligible VA payments can generally continue abroad; confirm account and contact details with VA.",
+  "The Foreign Medical Program is limited to qualifying service-connected care and is not comprehensive insurance.",
+  "Plan separately for local healthcare access, emergency care, and any supplemental coverage.",
+];
+
+const demoDocuments = ["Valid U.S. passport", "Background or police record if required", "Proof of income or funds", "Civil records and translations if required"];
+const demoMovingTasks = ["Confirm the current visa category with the official authority", "Compare neighborhoods and exact internet availability", "Price health coverage and emergency care", "Budget for flights, deposits, and temporary housing"];
+
 export const countries: Country[] = [
   {
     slug: "philippines", name: "Philippines", city: "Dumaguete", flag: "🇵🇭", region: "Southeast Asia",
@@ -75,6 +84,201 @@ export const countries: Country[] = [
     lifestyle: "A greener, quieter central-valley town with a moderate elevation and easy access to nature.", initialMovingCost: 5200,
     veteranConsiderations: ["VA benefits can generally be deposited while living abroad.", "FMP may cover qualifying service-connected care, not routine comprehensive healthcare.", "Consider travel time to larger hospitals when choosing a town."],
     movingTasks: ["Verify pensionado eligibility", "Price mandatory local healthcare contributions", "Test internet at the exact property", "Plan document authentication and translation"], accent: "#6b9b76"
+  },
+  {
+    slug: "vietnam", name: "Vietnam", city: "Da Nang", flag: "🇻🇳", region: "Southeast Asia",
+    climate: ["Tropical", "Warm"], settings: ["City", "Suburban"], monthlyCost: 1450, housingCost: 520,
+    healthcareScore: 72, healthcare: "Demonstration assumption: private clinics and hospitals are available in major cities, while complex care may require travel.",
+    englishScore: 58, english: "Demonstration assumption: English access is stronger in tourism and private services than in everyday administration.",
+    internetScore: 88, internet: "Demonstration assumption: urban fiber and mobile service are generally accessible; verify the exact address.",
+    residencyScore: 56, residencyCategory: "Long-stay options require research",
+    residency: "Demonstration summary only: visa and residence options depend on purpose, sponsorship, duration, and current rules.",
+    financialRequirements: "No requirement is verified in this prototype. Confirm current visa, work, and residence rules with official Vietnamese sources.",
+    documents: demoDocuments, transportation: "Demonstration assumption: ride-hailing, taxis, and motorbikes are common, with neighborhood walkability varying.",
+    lifestyle: "A coastal-city demonstration profile emphasizing food, beaches, and a warm climate.", initialMovingCost: 4200,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#d76a5b"
+  },
+  {
+    slug: "malaysia", name: "Malaysia", city: "George Town", flag: "🇲🇾", region: "Southeast Asia",
+    climate: ["Tropical", "Warm"], settings: ["City", "Suburban"], monthlyCost: 1750, housingCost: 650,
+    healthcareScore: 85, healthcare: "Demonstration assumption: major urban areas offer a range of private healthcare options and international-patient services.",
+    englishScore: 88, english: "Demonstration assumption: English is commonly accessible in cities, business, and many private services.",
+    internetScore: 91, internet: "Demonstration assumption: fast home and mobile internet are broadly available in established urban areas.",
+    residencyScore: 58, residencyCategory: "Long-stay programs to verify",
+    residency: "Demonstration summary only: long-stay categories may involve financial, age, insurance, or sponsorship conditions.",
+    financialRequirements: "No threshold is verified. Confirm current program availability and requirements with official Malaysian authorities.",
+    documents: demoDocuments, transportation: "Demonstration assumption: buses, ride-hailing, and walking can cover many central-city needs.",
+    lifestyle: "A multicultural island-city demonstration profile with food, heritage districts, and tropical weather.", initialMovingCost: 4800,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#4b8a83"
+  },
+  {
+    slug: "indonesia", name: "Indonesia", city: "Yogyakarta", flag: "🇮🇩", region: "Southeast Asia",
+    climate: ["Tropical", "Warm"], settings: ["City", "Suburban"], monthlyCost: 1400, housingCost: 480,
+    healthcareScore: 68, healthcare: "Demonstration assumption: private care is available in larger cities, with specialist depth varying by location.",
+    englishScore: 60, english: "Demonstration assumption: English is available in tourism and some private services; Indonesian supports daily independence.",
+    internetScore: 76, internet: "Demonstration assumption: urban internet can support remote work, but service quality varies by property.",
+    residencyScore: 55, residencyCategory: "Purpose-based visas to research",
+    residency: "Demonstration summary only: long-stay eligibility depends on the visa category, sponsorship, age, and current policy.",
+    financialRequirements: "No requirement is verified. Confirm current visa categories and evidence requirements with official Indonesian sources.",
+    documents: demoDocuments, transportation: "Demonstration assumption: ride-hailing and motorbikes are common; traffic and walkability vary.",
+    lifestyle: "A creative inland-city demonstration profile with arts, food, and access to cultural sites.", initialMovingCost: 4300,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#c9655b"
+  },
+  {
+    slug: "japan", name: "Japan", city: "Fukuoka", flag: "🇯🇵", region: "East Asia",
+    climate: ["Temperate", "Four seasons"], settings: ["City", "Suburban"], monthlyCost: 2550, housingCost: 1050,
+    healthcareScore: 94, healthcare: "Demonstration assumption: the city has extensive healthcare infrastructure; language and enrollment rules require planning.",
+    englishScore: 52, english: "Demonstration assumption: some English support exists, but Japanese is important for administration and daily services.",
+    internetScore: 96, internet: "Demonstration assumption: high-speed home and mobile internet are widely available in urban areas.",
+    residencyScore: 43, residencyCategory: "Eligibility depends on a qualifying status",
+    residency: "Demonstration summary only: residence generally requires a qualifying work, family, study, or other recognized status.",
+    financialRequirements: "No requirement is verified. Research the appropriate status of residence through official Japanese sources.",
+    documents: demoDocuments, transportation: "Demonstration assumption: rail, subway, buses, cycling, and walking make car-free living practical in many areas.",
+    lifestyle: "A compact coastal-city demonstration profile with strong transit, four seasons, and dense neighborhood services.", initialMovingCost: 7500,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#9e5360"
+  },
+  {
+    slug: "south-korea", name: "South Korea", city: "Busan", flag: "🇰🇷", region: "East Asia",
+    climate: ["Temperate", "Four seasons"], settings: ["City", "Suburban"], monthlyCost: 2400, housingCost: 950,
+    healthcareScore: 92, healthcare: "Demonstration assumption: major cities offer broad hospital and specialist access; coverage rules require verification.",
+    englishScore: 60, english: "Demonstration assumption: English access varies, and Korean is important for administration and many local services.",
+    internetScore: 96, internet: "Demonstration assumption: fast fixed and mobile connectivity is widely available in cities.",
+    residencyScore: 47, residencyCategory: "Qualifying visa required",
+    residency: "Demonstration summary only: work, family, study, investment, and other categories have distinct eligibility rules.",
+    financialRequirements: "No requirement is verified. Confirm the relevant visa category and evidence with official South Korean sources.",
+    documents: demoDocuments, transportation: "Demonstration assumption: metro, buses, rail, and walking support car-free living in much of the city.",
+    lifestyle: "A large coastal-city demonstration profile combining beaches, dense neighborhoods, and strong public transport.", initialMovingCost: 7200,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#5678a8"
+  },
+  {
+    slug: "panama", name: "Panama", city: "David", flag: "🇵🇦", region: "Latin America",
+    climate: ["Tropical", "Warm"], settings: ["City", "Suburban"], monthlyCost: 1900, housingCost: 720,
+    healthcareScore: 80, healthcare: "Demonstration assumption: private and public options exist, with greater specialist depth in larger population centers.",
+    englishScore: 62, english: "Demonstration assumption: English is available in some business and expat services; Spanish supports everyday life.",
+    internetScore: 82, internet: "Demonstration assumption: reliable service is available in many urban neighborhoods; verify by address.",
+    residencyScore: 74, residencyCategory: "Pension and residence routes to research",
+    residency: "Demonstration summary only: pension, investment, employment, and other residence categories may apply under current rules.",
+    financialRequirements: "No threshold is verified. Confirm qualifying income, deposits, and documentation with official Panamanian sources.",
+    documents: demoDocuments, transportation: "Demonstration assumption: taxis and buses are common; a car may help outside central areas.",
+    lifestyle: "A western-city demonstration profile with tropical weather and access to both highlands and the coast.", initialMovingCost: 5000,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#4d8ca1"
+  },
+  {
+    slug: "colombia", name: "Colombia", city: "Medellín", flag: "🇨🇴", region: "Latin America",
+    climate: ["Warm", "Temperate"], settings: ["City", "Suburban"], monthlyCost: 1600, housingCost: 600,
+    healthcareScore: 82, healthcare: "Demonstration assumption: major cities offer public and private networks, with access depending on enrollment and coverage.",
+    englishScore: 55, english: "Demonstration assumption: English support is available in some private services; Spanish is important for daily life.",
+    internetScore: 84, internet: "Demonstration assumption: fiber and cable are available in many established urban neighborhoods.",
+    residencyScore: 70, residencyCategory: "Income-based routes to research",
+    residency: "Demonstration summary only: pension, income, work, family, and other categories may be available under current rules.",
+    financialRequirements: "No threshold is verified. Confirm current income formulas and documentation with official Colombian sources.",
+    documents: demoDocuments, transportation: "Demonstration assumption: metro, buses, cable cars, taxis, and ride-hailing serve many neighborhoods.",
+    lifestyle: "A mountain-city demonstration profile with a mild climate and a strong urban neighborhood culture.", initialMovingCost: 4300,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#cfad3d"
+  },
+  {
+    slug: "ecuador", name: "Ecuador", city: "Cuenca", flag: "🇪🇨", region: "Latin America",
+    climate: ["Temperate"], settings: ["City", "Suburban"], monthlyCost: 1500, housingCost: 560,
+    healthcareScore: 78, healthcare: "Demonstration assumption: the city has public and private care, while some complex treatment may require travel.",
+    englishScore: 48, english: "Demonstration assumption: English is limited outside expat-oriented services; Spanish is important for independence.",
+    internetScore: 78, internet: "Demonstration assumption: workable urban service is available, with quality depending on neighborhood and provider.",
+    residencyScore: 72, residencyCategory: "Pension and income routes to research",
+    residency: "Demonstration summary only: pension, income, investment, family, and other residence categories may exist.",
+    financialRequirements: "No threshold is verified. Confirm current financial evidence and application steps with official Ecuadorian sources.",
+    documents: demoDocuments, transportation: "Demonstration assumption: buses, trams, taxis, and walking serve many central areas.",
+    lifestyle: "A highland-city demonstration profile with historic streets, a mild climate, and access to nearby nature.", initialMovingCost: 4200,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#5c8da0"
+  },
+  {
+    slug: "spain", name: "Spain", city: "Valencia", flag: "🇪🇸", region: "Europe",
+    climate: ["Warm", "Temperate"], settings: ["City", "Suburban"], monthlyCost: 2500, housingCost: 1100,
+    healthcareScore: 92, healthcare: "Demonstration assumption: public and private systems are available, with access depending on residence and registration.",
+    englishScore: 68, english: "Demonstration assumption: English is accessible in tourism and some professional services; Spanish supports daily life.",
+    internetScore: 94, internet: "Demonstration assumption: fast fiber and mobile service are widely available in cities.",
+    residencyScore: 62, residencyCategory: "National visa routes to research",
+    residency: "Demonstration summary only: work, study, family, non-working, and other national visa routes have distinct rules.",
+    financialRequirements: "No requirement is verified. Confirm current means, insurance, and documentation with official Spanish sources.",
+    documents: demoDocuments, transportation: "Demonstration assumption: metro, buses, trams, cycling, and walking support car-light living.",
+    lifestyle: "A Mediterranean-city demonstration profile with beaches, parks, dense neighborhoods, and warm weather.", initialMovingCost: 7200,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#d08b3f"
+  },
+  {
+    slug: "greece", name: "Greece", city: "Thessaloniki", flag: "🇬🇷", region: "Europe",
+    climate: ["Warm", "Temperate"], settings: ["City", "Suburban"], monthlyCost: 2200, housingCost: 850,
+    healthcareScore: 82, healthcare: "Demonstration assumption: public and private care are available, with access rules tied to status and insurance.",
+    englishScore: 72, english: "Demonstration assumption: English is accessible in tourism and many urban services; Greek helps with administration.",
+    internetScore: 88, internet: "Demonstration assumption: fixed and mobile service is broadly available in urban areas.",
+    residencyScore: 60, residencyCategory: "Residence routes to research",
+    residency: "Demonstration summary only: financially independent, work, family, study, and investment categories may apply.",
+    financialRequirements: "No threshold is verified. Confirm current income, insurance, and documentation rules with official Greek sources.",
+    documents: demoDocuments, transportation: "Demonstration assumption: buses, taxis, and walking serve central districts; regional travel options vary.",
+    lifestyle: "A northern coastal-city demonstration profile with food, waterfront life, and access to historic destinations.", initialMovingCost: 6300,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#5686b4"
+  },
+  {
+    slug: "croatia", name: "Croatia", city: "Rijeka", flag: "🇭🇷", region: "Europe",
+    climate: ["Temperate", "Four seasons"], settings: ["City", "Suburban"], monthlyCost: 2250, housingCost: 900,
+    healthcareScore: 85, healthcare: "Demonstration assumption: public and private services are available, with access depending on residence and coverage.",
+    englishScore: 78, english: "Demonstration assumption: English is commonly accessible in tourism and many city services.",
+    internetScore: 90, internet: "Demonstration assumption: reliable home and mobile service is broadly available in urban areas.",
+    residencyScore: 58, residencyCategory: "Temporary stay routes to research",
+    residency: "Demonstration summary only: work, family, study, digital-nomad, and other categories have separate conditions.",
+    financialRequirements: "No requirement is verified. Confirm the selected route, financial evidence, and insurance rules officially.",
+    documents: demoDocuments, transportation: "Demonstration assumption: buses, walking, ferries, and regional connections support central-city living.",
+    lifestyle: "A northern Adriatic demonstration profile with a working port, waterfront districts, and nearby islands.", initialMovingCost: 6500,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#557ea4"
+  },
+  {
+    slug: "italy", name: "Italy", city: "Lecce", flag: "🇮🇹", region: "Europe",
+    climate: ["Warm", "Temperate"], settings: ["City", "Suburban"], monthlyCost: 2350, housingCost: 900,
+    healthcareScore: 88, healthcare: "Demonstration assumption: public and private care are available, with registration and coverage depending on status.",
+    englishScore: 60, english: "Demonstration assumption: English access varies; Italian is important for administration and everyday independence.",
+    internetScore: 91, internet: "Demonstration assumption: urban fiber and mobile service are generally available; verify the property.",
+    residencyScore: 55, residencyCategory: "National visa routes to research",
+    residency: "Demonstration summary only: elective residence, work, family, study, and other routes have distinct requirements.",
+    financialRequirements: "No requirement is verified. Confirm current income, accommodation, and insurance rules with official Italian sources.",
+    documents: demoDocuments, transportation: "Demonstration assumption: walking and local buses cover the center, with rail for regional connections.",
+    lifestyle: "A southern historic-city demonstration profile with warm weather, food culture, and access to Adriatic beaches.", initialMovingCost: 6800,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#6f956d"
+  },
+  {
+    slug: "georgia", name: "Georgia", city: "Tbilisi", flag: "🇬🇪", region: "Europe",
+    climate: ["Temperate", "Four seasons"], settings: ["City", "Suburban"], monthlyCost: 1550, housingCost: 600,
+    healthcareScore: 70, healthcare: "Demonstration assumption: private clinics and hospitals are available in the capital, with specialist depth varying.",
+    englishScore: 60, english: "Demonstration assumption: English is available in some city services; Georgian supports broader daily access.",
+    internetScore: 86, internet: "Demonstration assumption: urban fixed and mobile internet can support remote work; verify by address.",
+    residencyScore: 68, residencyCategory: "Entry and residence rules to verify",
+    residency: "Demonstration summary only: entry permissions and longer-term residence categories depend on current nationality-specific rules.",
+    financialRequirements: "No requirement is verified. Confirm permitted stay, residence categories, and financial evidence officially.",
+    documents: demoDocuments, transportation: "Demonstration assumption: metro, buses, taxis, and walking serve central neighborhoods.",
+    lifestyle: "A hilly capital-city demonstration profile with historic districts, food culture, and four-season weather.", initialMovingCost: 4300,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#9b665d"
+  },
+  {
+    slug: "dominican-republic", name: "Dominican Republic", city: "Santiago", flag: "🇩🇴", region: "Latin America",
+    climate: ["Tropical", "Warm"], settings: ["City", "Suburban"], monthlyCost: 1700, housingCost: 650,
+    healthcareScore: 68, healthcare: "Demonstration assumption: private hospitals and clinics are available in larger cities; options vary outside them.",
+    englishScore: 50, english: "Demonstration assumption: English is available in tourism and some private services; Spanish is important for daily life.",
+    internetScore: 72, internet: "Demonstration assumption: urban broadband is available, but reliability should be checked at the exact property.",
+    residencyScore: 65, residencyCategory: "Residence categories to research",
+    residency: "Demonstration summary only: pension, rentier, work, family, investment, and other routes may have distinct rules.",
+    financialRequirements: "No threshold is verified. Confirm current income evidence, translations, and application steps officially.",
+    documents: demoDocuments, transportation: "Demonstration assumption: taxis, ride-hailing, buses, and private vehicles are common.",
+    lifestyle: "An inland-city demonstration profile with warm weather, active neighborhoods, and access to mountain regions.", initialMovingCost: 4500,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#4278a5"
+  },
+  {
+    slug: "belize", name: "Belize", city: "San Ignacio", flag: "🇧🇿", region: "Latin America",
+    climate: ["Tropical", "Warm"], settings: ["Suburban", "Rural"], monthlyCost: 1900, housingCost: 750,
+    healthcareScore: 58, healthcare: "Demonstration assumption: routine care is available locally, while complex care may require travel to a larger center or abroad.",
+    englishScore: 95, english: "Demonstration assumption: English is broadly accessible for daily life and administration.",
+    internetScore: 68, internet: "Demonstration assumption: service can support everyday use, but speed and reliability vary by location.",
+    residencyScore: 62, residencyCategory: "Retirement and residence routes to research",
+    residency: "Demonstration summary only: residence and retirement programs may have stay, income, fee, and documentation conditions.",
+    financialRequirements: "No requirement is verified. Confirm current program thresholds and residence procedures with official Belizean sources.",
+    documents: demoDocuments, transportation: "Demonstration assumption: buses and taxis connect towns, while a vehicle can help in rural areas.",
+    lifestyle: "A small inland-town demonstration profile with English access, tropical weather, and nearby nature.", initialMovingCost: 5000,
+    veteranConsiderations: demoVeteranConsiderations, movingTasks: demoMovingTasks, accent: "#4e9272"
   }
 ];
 

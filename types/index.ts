@@ -1,5 +1,5 @@
 export type Climate = "Tropical" | "Warm" | "Temperate" | "Four seasons";
-export type Region = "Southeast Asia" | "Latin America" | "Europe" | "Open to anywhere";
+export type Region = "Southeast Asia" | "East Asia" | "Latin America" | "Europe" | "Open to anywhere";
 export type Setting = "City" | "Suburban" | "Rural" | "Flexible";
 
 export interface VeteranProfile {
@@ -42,7 +42,14 @@ export interface Country {
   initialMovingCost: number;
   veteranConsiderations: string[];
   movingTasks: string[];
+  officialSources?: OfficialSource[];
   accent: string;
+}
+
+export interface OfficialSource {
+  label: string;
+  url: string;
+  verifiedAt: string;
 }
 
 export interface ScoreBreakdown {
