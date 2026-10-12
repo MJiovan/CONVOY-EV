@@ -1,5 +1,5 @@
 import { countries } from "@/data/countries";
-import type { Country, MatchResult, ScoreBreakdown, VeteranProfile } from "@/types";
+import type { Country, MatchFactor, MatchResult, ScoreBreakdown, VeteranProfile } from "@/types";
 
 export const defaultProfile: VeteranProfile = {
   vaIncome: 2400,
@@ -55,22 +55,44 @@ function lifestyleScore(profile: VeteranProfile, country: Country) {
 }
 
 function buildReasons(profile: VeteranProfile, country: Country, breakdown: ScoreBreakdown, remaining: number) {
-  const reasons: string[] = [];
-  if (remaining >= profile.savingsGoal) reasons.push(`Leaves ${formatCurrency(remaining)} after estimated costs, meeting your ${formatCurrency(profile.savingsGoal)} savings goal.`);
-  else if (remaining >= 0) reasons.push(`Stays cash-flow positive, but falls short of your savings goal by ${formatCurrency(profile.savingsGoal - remaining)}.`);
-  else reasons.push(`Runs about ${formatCurrency(Math.abs(remaining))} over the monthly amount available after ongoing expenses.`);
-  reasons.push(country.housingCost <= profile.housingBudget
-    ? `Sample housing is ${formatCurrency(profile.housingBudget - country.housingCost)} below your housing limit.`
-    : `Sample housing is ${formatCurrency(country.housingCost - profile.housingBudget)} above your housing limit.`);
-  if (country.climate.includes(profile.climate)) reasons.push(`Matches your ${profile.climate.toLowerCase()} climate preference.`);
-  else reasons.push(`Climate differs from your ${profile.climate.toLowerCase()} preference.`);
-  if (profile.region !== "Open to anywhere") reasons.push(country.region === profile.region ? `Located in your preferred region: ${profile.region}.` : `Outside your preferred region of ${profile.region}.`);
+  const reasons: MatchFactor[] = [];
+  if (remaining < 0) {
+    reasons.push({ tone: "warning", text: `Estimated costs exceed the income available after ongoing expenses by ${formatCurrency(Math.abs(remaining))} per month.` });
+  } else if (remaining >= profile.savingsGoal) {
+    reasons.push({ tone: "positive", text: `Estimated remaining income of ${formatCurrency(remaining)} meets your ${formatCurrency(profile.savingsGoal)} savings goal.` });
+  } else if (remaining === 0) {
+    reasons.push({ tone: "neutral", text: "The estimate breaks even, leaving no monthly cushion or savings." });
+  } else {
+    reasons.push({ tone: "neutral", text: `Estimated remaining income is ${formatCurrency(remaining)}, which is ${formatCurrency(profile.savingsGoal - remaining)} below your savings goal.` });
+  }
+
+  const housingDifference = profile.housingBudget - country.housingCost;
+  if (housingDifference < 0) {
+    reasons.push({ tone: "warning", text: `Sample housing is ${formatCurrency(Math.abs(housingDifference))} above your housing limit.` });
+  } else if (profile.housingBudget > 0 && housingDifference <= profile.housingBudget * 0.1) {
+    reasons.push({ tone: "neutral", text: `Sample housing is within your limit, with ${formatCurrency(housingDifference)} of housing-budget room.` });
+  } else {
+    reasons.push({ tone: "positive", text: `Sample housing is ${formatCurrency(housingDifference)} below your housing limit.` });
+  }
+
+  const climateMatches = country.climate.includes(profile.climate);
+  const regionMatches = profile.region === "Open to anywhere" || country.region === profile.region;
+  if (profile.region !== "Open to anywhere" && !regionMatches) {
+    reasons.push({ tone: "neutral", text: `This destination is outside your preferred region of ${profile.region}.` });
+  } else if (!climateMatches) {
+    reasons.push({ tone: "neutral", text: `The local climate differs from your ${profile.climate.toLowerCase()} preference.` });
+  } else if (profile.region !== "Open to anywhere") {
+    reasons.push({ tone: "positive", text: `Matches both your ${profile.region} region and ${profile.climate.toLowerCase()} climate preferences.` });
+  } else {
+    reasons.push({ tone: "positive", text: `Matches your ${profile.climate.toLowerCase()} climate preference.` });
+  }
+
   const strongest = [
     { label: "healthcare", value: country.healthcareScore, importance: profile.healthcareImportance },
     { label: "English access", value: country.englishScore, importance: profile.englishImportance },
     { label: "internet", value: country.internetScore, importance: profile.internetImportance },
   ].sort((a, b) => (b.value * b.importance) - (a.value * a.importance))[0];
-  if (breakdown.lifestyle >= 70) reasons.push(`${strongest.label[0].toUpperCase()}${strongest.label.slice(1)} supports the lifestyle score.`);
+  if (reasons.length < 3 && breakdown.lifestyle >= 70) reasons.push({ tone: "positive", text: `${strongest.label[0].toUpperCase()}${strongest.label.slice(1)} supports the lifestyle score.` });
   return reasons.slice(0, 3);
 }
 

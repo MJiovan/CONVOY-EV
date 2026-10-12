@@ -53,6 +53,11 @@ export interface ScoreBreakdown {
   residency: number;
 }
 
+export interface MatchFactor {
+  tone: "positive" | "neutral" | "warning";
+  text: string;
+}
+
 export interface MatchResult {
   country: Country;
   score: number;
@@ -61,5 +66,5 @@ export interface MatchResult {
   remaining: number;
   status: "Strong Match" | "Possible Match" | "Needs More Research";
   breakdown: ScoreBreakdown;
-  reasons: string[];
+  reasons: MatchFactor[];
 }
