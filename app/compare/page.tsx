@@ -5,24 +5,28 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Plus, X } from "lucide-react";
 import { countries } from "@/data/countries";
 import { defaultProfile, formatCurrency, scoreCountry } from "@/lib/matching";
-import { loadComparison, loadProfile, saveComparison } from "@/lib/profile-storage";
+import { isValidComparison, loadComparison, loadProfile, saveComparison } from "@/lib/profile-storage";
 import { Disclaimer } from "@/components/Disclaimer";
 import { ScoreRing } from "@/components/ScoreRing";
 import { StepBar } from "@/components/StepBar";
 import type { VeteranProfile } from "@/types";
 import { AlgorithmExplainer } from "@/components/AlgorithmExplainer";
 import { DemoDataBadge } from "@/components/DemoDataBadge";
+import { FlowLoading } from "@/components/FlowLoading";
 
 export default function ComparePage() {
   const [profile, setProfile] = useState<VeteranProfile>(defaultProfile);
   const [selected, setSelected] = useState<string[]>([]);
-  useEffect(() => { const timer = window.setTimeout(() => { setProfile(loadProfile()); setSelected(loadComparison().filter(slug=>countries.some(country=>country.slug===slug)).slice(0,3)); }, 0); return () => window.clearTimeout(timer); }, []);
+  const [ready, setReady] = useState(false);
+  useEffect(() => { const timer = window.setTimeout(() => { setProfile(loadProfile()); setSelected(loadComparison()); setReady(true); }, 0); return () => window.clearTimeout(timer); }, []);
   const results = useMemo(() => selected.map(slug=>countries.find(c=>c.slug===slug)).filter(Boolean).map(c=>scoreCountry(profile,c!)), [selected,profile]);
   const remove = (slug:string) => { const next=selected.filter(s=>s!==slug); setSelected(next); saveComparison(next); };
   const add = (slug:string) => { if(selected.length>=3||selected.includes(slug)) return; const next=[...selected,slug]; setSelected(next); saveComparison(next); };
+  if (!ready) return <FlowLoading active={2}/>;
+  const canCompare = isValidComparison(selected);
   return <main className="min-h-screen bg-[#f6f7f3]"><StepBar active={2}/><section className="container-shell py-10 sm:py-14"><Link href="/matches" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-[#17392f]"><ArrowLeft size={16}/> Back to matches</Link><div className="mt-6"><p className="eyebrow">Side-by-side decision support</p><h1 className="mt-3 text-4xl font-bold tracking-[-.04em] text-[#17392f] sm:text-5xl">Compare your options.</h1><p className="mt-4 text-slate-500">Use the same profile assumptions across up to three destinations.</p></div>
     <div className="mt-7"><AlgorithmExplainer compact/></div>
-    {results.length ? <div className="mt-7 overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm"><div className="overflow-x-auto"><div className="grid min-w-[760px]" style={{gridTemplateColumns:`190px repeat(${results.length}, minmax(190px, 1fr))`}}><div className="bg-[#17392f] p-5 text-xs font-bold uppercase tracking-[.14em] text-white/50">Destination</div>{results.map(r=><div key={r.country.slug} className="relative border-l border-white/10 bg-[#17392f] p-5 text-white"><button onClick={()=>remove(r.country.slug)} className="absolute right-3 top-3 rounded-full bg-white/10 p-1.5 text-white/60 hover:text-white" aria-label={`Remove ${r.country.name}`}><X size={14}/></button><span className="text-3xl">{r.country.flag}</span><h2 className="mt-2 text-xl font-bold">{r.country.name}</h2><p className="text-xs text-white/50">{r.country.city}</p><div className="mt-3"><DemoDataBadge inverse/></div></div>)}
+    {canCompare ? <div className="mt-7 overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm"><div className="overflow-x-auto"><div className="grid min-w-[760px]" style={{gridTemplateColumns:`190px repeat(${results.length}, minmax(190px, 1fr))`}}><div className="bg-[#17392f] p-5 text-xs font-bold uppercase tracking-[.14em] text-white/50">Destination</div>{results.map(r=><div key={r.country.slug} className="relative border-l border-white/10 bg-[#17392f] p-5 text-white"><button onClick={()=>remove(r.country.slug)} className="absolute right-3 top-3 rounded-full bg-white/10 p-1.5 text-white/60 hover:text-white" aria-label={`Remove ${r.country.name}`}><X size={14}/></button><span className="text-3xl">{r.country.flag}</span><h2 className="mt-2 text-xl font-bold">{r.country.name}</h2><p className="text-xs text-white/50">{r.country.city}</p><div className="mt-3"><DemoDataBadge inverse/></div></div>)}
       <Row label="Readiness score">{results.map(r=><Cell key={r.country.slug}><div className="flex items-center gap-3"><ScoreRing score={r.score} size="sm"/><span className="text-xs font-bold text-[#17392f]">{r.status}</span></div></Cell>)}</Row>
       <Row label="Monthly income">{results.map(r=><Cell key={r.country.slug} strong>{formatCurrency(r.monthlyIncome)}</Cell>)}</Row>
       <Row label="Ongoing expenses">{results.map(r=><Cell key={r.country.slug} strong>− {formatCurrency(profile.currentExpenses)}</Cell>)}</Row>
@@ -34,7 +38,7 @@ export default function ComparePage() {
       <Row label="Internet">{results.map(r=><Cell key={r.country.slug}><Score value={r.country.internetScore}/><p>{r.country.internet}</p></Cell>)}</Row>
       <Row label="English access">{results.map(r=><Cell key={r.country.slug}><Score value={r.country.englishScore}/><p>{r.country.english}</p></Cell>)}</Row>
       <div className="bg-[#f5f7f4] p-5 text-xs font-bold uppercase tracking-[.14em] text-slate-400">Next step</div>{results.map(r=><Cell key={r.country.slug}><Link href={`/report/${r.country.slug}`} className="btn-dark w-full justify-center">Full report <ArrowRight size={15}/></Link></Cell>)}
-      </div></div></div> : <div className="mt-10 rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center"><p className="font-bold text-[#17392f]">No countries selected yet.</p><Link href="/matches" className="btn-lime mt-5">Choose matches</Link></div>}
+      </div></div></div> : <div className="mt-10 rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center"><p className="font-bold text-[#17392f]">{selected.length === 1 ? "Select one more country to compare." : "Select at least two countries to compare."}</p><p className="mt-2 text-sm text-slate-500">Your saved selections remain available on the matches page.</p><Link href="/matches" className="btn-lime mt-5">Choose matches</Link></div>}
     {selected.length<3 && <div className="mt-7 rounded-2xl border border-slate-200 bg-white p-5"><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm font-bold text-[#17392f]">Add another destination</p><DemoDataBadge/></div><div className="mt-3 flex flex-wrap gap-2">{countries.filter(c=>!selected.includes(c.slug)).map(c=><button key={c.slug} onClick={()=>add(c.slug)} className="btn-outline py-2 text-xs"><Plus size={14}/>{c.flag} {c.name}</button>)}</div></div>}
     <div className="mt-8"><Disclaimer/></div>
   </section></main>;

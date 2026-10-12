@@ -13,10 +13,12 @@ import type { VeteranProfile } from "@/types";
 import { DemoDataBadge } from "@/components/DemoDataBadge";
 import { SourcePlaceholders } from "@/components/SourcePlaceholders";
 import { AlgorithmExplainer } from "@/components/AlgorithmExplainer";
+import { FlowLoading } from "@/components/FlowLoading";
 
 export default function ReportPage({params}:{params:Promise<{country:string}>}) {
-  const {country:slug}=use(params); const country=getCountry(slug); const [profile,setProfile]=useState<VeteranProfile>(defaultProfile); useEffect(()=>{ const timer=window.setTimeout(()=>setProfile(loadProfile()),0); return ()=>window.clearTimeout(timer); },[]);
+  const {country:slug}=use(params); const country=getCountry(slug); const [profile,setProfile]=useState<VeteranProfile>(defaultProfile); const [ready,setReady]=useState(false); useEffect(()=>{ const timer=window.setTimeout(()=>{ setProfile(loadProfile()); setReady(true); },0); return ()=>window.clearTimeout(timer); },[]);
   if(!country) return <main className="container-shell py-20"><h1 className="text-3xl font-bold">Country not found</h1><Link href="/matches" className="btn-lime mt-6">Back to matches</Link></main>;
+  if(!ready) return <FlowLoading active={3}/>;
   const result=scoreCountry(profile,country); const income=profile.vaIncome+profile.otherIncome;
   const breakdown=[
     {label:"Affordability",value:result.breakdown.affordability,why:`Compares ${formatCurrency(country.monthlyCost)} in estimated costs with ${formatCurrency(result.availableAfterExpenses)} available after ongoing expenses.`},

@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { Compass, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { useComparisonAvailability } from "@/hooks/use-comparison-availability";
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
+  const { canCompare, selectionCount } = useComparisonAvailability();
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#102720]/90 text-white backdrop-blur-xl">
       <div className="container-shell flex h-[72px] items-center justify-between">
@@ -16,15 +18,15 @@ export function SiteHeader() {
         <nav className="hidden items-center gap-7 text-sm text-white/70 md:flex">
           <Link href="/#how-it-works" className="transition hover:text-white">How it works</Link>
           <Link href="/matches" className="transition hover:text-white">Explore countries</Link>
-          <Link href="/compare" className="transition hover:text-white">Compare</Link>
+          {canCompare ? <Link href="/compare" className="transition hover:text-white">Compare</Link> : <span aria-disabled="true" title="Select at least two countries to compare" className="cursor-not-allowed text-white/30">Compare</span>}
           <Link href="/profile" className="btn-lime px-5 py-2.5 text-sm">Find my countries</Link>
         </nav>
-        <button className="p-2 md:hidden" onClick={() => setOpen(!open)} aria-label="Toggle navigation">{open ? <X/> : <Menu/>}</button>
+        <button className="p-2 md:hidden" onClick={() => setOpen(!open)} aria-label="Toggle navigation" aria-expanded={open} aria-controls="mobile-navigation">{open ? <X/> : <Menu/>}</button>
       </div>
-      {open && <nav className="container-shell flex flex-col gap-4 border-t border-white/10 py-5 text-sm md:hidden">
+      {open && <nav id="mobile-navigation" className="container-shell flex flex-col gap-4 border-t border-white/10 py-5 text-sm md:hidden">
         <Link href="/#how-it-works" onClick={() => setOpen(false)}>How it works</Link>
         <Link href="/matches" onClick={() => setOpen(false)}>Explore countries</Link>
-        <Link href="/compare" onClick={() => setOpen(false)}>Compare</Link>
+        {canCompare ? <Link href="/compare" onClick={() => setOpen(false)}>Compare ({selectionCount})</Link> : <span aria-disabled="true" className="text-white/35">Compare · select 2 countries</span>}
         <Link href="/profile" className="btn-lime w-full text-center" onClick={() => setOpen(false)}>Find my countries</Link>
       </nav>}
     </header>
