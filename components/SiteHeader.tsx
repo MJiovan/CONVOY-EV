@@ -20,6 +20,7 @@ export function SiteHeader() {
           <a href="/#how-it-works" className="transition hover:text-white">How it works</a>
           <a href="/explore" className="transition hover:text-white">Explore countries</a>
           {canCompare ? <a href="/compare" className="transition hover:text-white">Compare</a> : <span aria-disabled="true" title="Select at least two countries to compare" className="cursor-not-allowed text-white/30">Compare</span>}
+          <a href="/plan" className="transition hover:text-white">Relocation plan</a>
           <a href="/profile" className="btn-lime px-5 py-2.5 text-sm">Find my countries</a>
         </nav>
         <button className="p-2 md:hidden" onClick={() => setOpen(!open)} aria-label="Toggle navigation" aria-expanded={open} aria-controls="mobile-navigation">{open ? <X/> : <Menu/>}</button>
@@ -28,6 +29,7 @@ export function SiteHeader() {
         <a href="/#how-it-works" onClick={() => setOpen(false)}>How it works</a>
         <a href="/explore" onClick={() => setOpen(false)}>Explore countries</a>
         {canCompare ? <a href="/compare" onClick={() => setOpen(false)}>Compare ({selectionCount})</a> : <span aria-disabled="true" className="text-white/35">Compare · select 2 countries</span>}
+        <a href="/plan" onClick={() => setOpen(false)}>Relocation plan</a>
         <a href="/profile" className="btn-lime w-full text-center" onClick={() => setOpen(false)}>Find my countries</a>
       </nav>}
     </header>

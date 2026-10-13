@@ -7,6 +7,7 @@ const steps = [
   { label: "Matches", href: "/matches" },
   { label: "Compare", href: "/compare" },
   { label: "Report", href: null },
+  { label: "Plan", href: "/plan" },
 ] as const;
 
 export function StepBar({ active }: { active: number }) {
