@@ -113,3 +113,88 @@ export interface RelocationReadinessResult {
   monthsUntilMove: number;
   projectedSavings: number;
 }
+
+export type CityType = "Major City" | "Mid-Size City" | "Smaller City";
+
+export interface CityExpenseProfile {
+  rent: number;
+  utilities: number;
+  food: number;
+  transportation: number;
+  healthcare: number;
+  other: number;
+}
+
+export interface CityMovingCostProfile {
+  flight: number;
+  housingDeposit: number;
+  setup: number;
+  other: number;
+}
+
+export interface CityProfile {
+  id: string;
+  countrySlug: string;
+  name: string;
+  type: CityType;
+  expenses: CityExpenseProfile;
+  movingCosts: CityMovingCostProfile;
+  dataStatus: "Demo Data";
+}
+
+export interface RelocationScenarioInputs {
+  countrySlug: string;
+  cityId: string;
+  targetMoveDate: string;
+  veteranIncome: number;
+  otherIncome: number;
+  existingExpenses: number;
+  currentSavings: number;
+  housingBudget: number;
+  savingsGoal: number;
+  rent: number;
+  movingCosts: number;
+}
+
+export type BlockerStatus = "Ready" | "Needs Attention" | "Potential Blocker";
+
+export interface ScenarioBlocker {
+  id: string;
+  label: string;
+  status: BlockerStatus;
+  reason: string;
+  suggestion: string;
+}
+
+export interface MonthlyProjection {
+  month: number;
+  balance: number;
+}
+
+export interface ScenarioResult {
+  monthlyIncome: number;
+  monthlyLivingCost: number;
+  monthlySurplus: number;
+  initialCashNeeded: number;
+  estimatedMovingCosts: number;
+  savingsAfterMove: number;
+  savingsAfter3Months: number;
+  savingsAfter6Months: number;
+  savingsAfter12Months: number;
+  firstNegativeMonth: number | null;
+  financialSustainability: "Good" | "Watch" | "At Risk";
+  readinessScore: number;
+  projections: MonthlyProjection[];
+  blockers: ScenarioBlocker[];
+  biggestConcern: string;
+  suggestedNextStep: string;
+}
+
+export interface SavedRelocationScenario {
+  id: string;
+  name: string;
+  inputs: RelocationScenarioInputs;
+  result: ScenarioResult;
+  createdAt: string;
+  updatedAt: string;
+}

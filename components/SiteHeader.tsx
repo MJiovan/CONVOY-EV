@@ -16,18 +16,20 @@ export function SiteHeader() {
           <span className="grid h-9 w-9 place-items-center rounded-full bg-[#d7f06b] text-[#102720]"><Compass size={19} strokeWidth={2.3}/></span>
           <span className="text-[15px] font-bold tracking-[.19em]">VET NOMAD</span>
         </a>
-        <nav className="hidden items-center gap-7 text-sm text-white/70 md:flex">
+        <nav className="hidden items-center gap-5 text-sm text-white/70 lg:flex xl:gap-7">
           <a href="/#how-it-works" className="transition hover:text-white">How it works</a>
           <a href="/explore" className="transition hover:text-white">Explore countries</a>
+          <a href="/simulator" className="font-semibold text-[#d7f06b] transition hover:text-white">What If I Move?</a>
           {canCompare ? <a href="/compare" className="transition hover:text-white">Compare</a> : <span aria-disabled="true" title="Select at least two countries to compare" className="cursor-not-allowed text-white/30">Compare</span>}
           <a href="/plan" className="transition hover:text-white">Relocation plan</a>
           <a href="/profile" className="btn-lime px-5 py-2.5 text-sm">Find my countries</a>
         </nav>
-        <button className="p-2 md:hidden" onClick={() => setOpen(!open)} aria-label="Toggle navigation" aria-expanded={open} aria-controls="mobile-navigation">{open ? <X/> : <Menu/>}</button>
+        <button className="p-2 lg:hidden" onClick={() => setOpen(!open)} aria-label="Toggle navigation" aria-expanded={open} aria-controls="mobile-navigation">{open ? <X/> : <Menu/>}</button>
       </div>
-      {open && <nav id="mobile-navigation" className="container-shell flex flex-col gap-4 border-t border-white/10 py-5 text-sm md:hidden">
+      {open && <nav id="mobile-navigation" className="container-shell flex flex-col gap-4 border-t border-white/10 py-5 text-sm lg:hidden">
         <a href="/#how-it-works" onClick={() => setOpen(false)}>How it works</a>
         <a href="/explore" onClick={() => setOpen(false)}>Explore countries</a>
+        <a href="/simulator" className="font-semibold text-[#d7f06b]" onClick={() => setOpen(false)}>What If I Move?</a>
         {canCompare ? <a href="/compare" onClick={() => setOpen(false)}>Compare ({selectionCount})</a> : <span aria-disabled="true" className="text-white/35">Compare · select 2 countries</span>}
         <a href="/plan" onClick={() => setOpen(false)}>Relocation plan</a>
         <a href="/profile" className="btn-lime w-full text-center" onClick={() => setOpen(false)}>Find my countries</a>
