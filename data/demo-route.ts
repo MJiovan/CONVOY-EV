@@ -1,4 +1,6 @@
 import type { ChargingStation, ConnectorType, GroupTrip } from "@/types";
+import { getCatalogVehicle } from "@/data/ev-catalog";
+import { vehicleFromCatalog } from "@/lib/vehicle-specs";
 
 export const connectorTypes: ConnectorType[] = ["NACS", "CCS", "CHAdeMO", "J1772"];
 
@@ -21,6 +23,9 @@ export function buildDemoStations(totalDistanceMiles: number): ChargingStation[]
 
 export function createSampleTrip(): GroupTrip {
   const now = new Date().toISOString();
+  const jio = getCatalogVehicle("2022-tesla-model-y-performance")!;
+  const alex = getCatalogVehicle("2024-hyundai-ioniq5-limited-awd")!;
+  const chris = getCatalogVehicle("2023-ford-mach-e-premium-awd")!;
   return {
     id: "demo-convoy",
     name: "Desert Weekend Convoy",
@@ -30,9 +35,9 @@ export function createSampleTrip(): GroupTrip {
     createdAt: now,
     updatedAt: now,
     vehicles: [
-      { id: "jio-model-y", nickname: "Jio", manufacturer: "Tesla", model: "Model Y", estimatedRangeMiles: 240, startingBatteryPercent: 82, maxChargingSpeedKw: 250, connectors: ["NACS"] },
-      { id: "alex-ioniq-5", nickname: "Alex", manufacturer: "Hyundai", model: "Ioniq 5", estimatedRangeMiles: 210, startingBatteryPercent: 64, maxChargingSpeedKw: 235, connectors: ["CCS", "NACS"] },
-      { id: "chris-mach-e", nickname: "Chris", manufacturer: "Ford", model: "Mustang Mach-E", estimatedRangeMiles: 220, startingBatteryPercent: 71, maxChargingSpeedKw: 150, connectors: ["CCS", "NACS"] },
+      vehicleFromCatalog(jio, { id: "jio-model-y", nickname: "Jio", startingBatteryPercent: 82 }),
+      vehicleFromCatalog(alex, { id: "alex-ioniq-5", nickname: "Alex", startingBatteryPercent: 64 }),
+      vehicleFromCatalog(chris, { id: "chris-mach-e", nickname: "Chris", startingBatteryPercent: 71 }),
     ],
   };
 }

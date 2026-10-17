@@ -1,4 +1,5 @@
 import { buildDemoStations } from "@/data/demo-route";
+import { effectiveVehicleSpecs, vehicleDisplayName } from "@/lib/vehicle-specs";
 import type { ChargingStation, CompatibilityWarning, ConnectorType, EVVehicle, GroupChargingPlan, GroupChargingStop, GroupTrip, VehicleStopPlan } from "@/types";
 
 const RESERVE_PERCENT = 12;
@@ -95,13 +96,13 @@ export function calculateGroupPlan(trip: GroupTrip): GroupChargingPlan {
 }
 
 export function isStationCompatibleWithGroup(station: ChargingStation, vehicles: EVVehicle[]) {
-  return vehicles.every(vehicle => vehicle.connectors.some(connector => station.connectors.includes(connector)));
+  return vehicles.every(vehicle => effectiveVehicleSpecs(vehicle).connectors.some(connector => station.connectors.includes(connector)));
 }
 
 function buildCompatibilityWarnings(stations: ChargingStation[], vehicles: EVVehicle[]): CompatibilityWarning[] {
   return stations.filter(station => !isStationCompatibleWithGroup(station, vehicles)).map(station => {
-    const incompatibleVehicles = vehicles.filter(vehicle => !vehicle.connectors.some(connector => station.connectors.includes(connector)));
-    const missingConnectors = [...new Set(incompatibleVehicles.flatMap(vehicle => vehicle.connectors))];
+    const incompatibleVehicles = vehicles.filter(vehicle => !effectiveVehicleSpecs(vehicle).connectors.some(connector => station.connectors.includes(connector)));
+    const missingConnectors = [...new Set(incompatibleVehicles.flatMap(vehicle => effectiveVehicleSpecs(vehicle).connectors))];
     return {
       stationName: station.name,
       distanceMiles: station.distanceMiles,
@@ -112,7 +113,7 @@ function buildCompatibilityWarnings(stations: ChargingStation[], vehicles: EVVeh
 }
 
 function findConstraint(states: VehicleState[]) {
-  return states.map(state => ({ state, safeMiles: state.vehicle.estimatedRangeMiles * Math.max(0, state.batteryPercent - RESERVE_PERCENT) / 100 })).sort((a, b) => a.safeMiles - b.safeMiles)[0];
+  return states.map(state => ({ state, safeMiles: effectiveVehicleSpecs(state.vehicle).estimatedRangeMiles * Math.max(0, state.batteryPercent - RESERVE_PERCENT) / 100 })).sort((a, b) => a.safeMiles - b.safeMiles)[0];
 }
 
 function estimateNextLeg(currentDistance: number, totalDistance: number, stations: ChargingStation[], vehicles: EVVehicle[]) {
@@ -121,16 +122,17 @@ function estimateNextLeg(currentDistance: number, totalDistance: number, station
 }
 
 function createVehicleStopPlan(state: VehicleState, station: ChargingStation, _segmentMiles: number, departureBatteryPercent: number): VehicleStopPlan {
-  const connectorCompatible = state.vehicle.connectors.some(connector => station.connectors.includes(connector));
+  const specs = effectiveVehicleSpecs(state.vehicle);
+  const connectorCompatible = specs.connectors.some(connector => station.connectors.includes(connector));
   const arrivalBatteryPercent = clamp(state.batteryPercent, 0, 100);
   const target = clamp(departureBatteryPercent, arrivalBatteryPercent, 95);
-  const energyNeededKwh = estimatedBatteryCapacity(state.vehicle) * ((target - arrivalBatteryPercent) / 100);
-  const effectivePower = connectorCompatible ? Math.min(state.vehicle.maxChargingSpeedKw, station.maxPowerKw, connectorPowerCap(state.vehicle.connectors, station.connectors)) * 0.72 : 0;
+  const energyNeededKwh = specs.batteryCapacityKwh * ((target - arrivalBatteryPercent) / 100);
+  const effectivePower = connectorCompatible ? Math.min(specs.maxChargingSpeedKw, station.maxPowerKw, connectorPowerCap(specs.connectors, station.connectors)) * 0.72 : 0;
   const estimatedChargingMinutes = effectivePower > 0 ? Math.ceil((energyNeededKwh / effectivePower) * 60) : 0;
   return {
     vehicleId: state.vehicle.id,
     nickname: state.vehicle.nickname,
-    vehicleLabel: `${state.vehicle.manufacturer} ${state.vehicle.model}`,
+    vehicleLabel: vehicleDisplayName(state.vehicle),
     arrivalBatteryPercent: Math.round(arrivalBatteryPercent),
     departureBatteryPercent: Math.round(target),
     estimatedChargingMinutes,
@@ -149,17 +151,13 @@ function longestCharge(plans: VehicleStopPlan[]) {
   return [...plans].sort((a, b) => b.estimatedChargingMinutes - a.estimatedChargingMinutes)[0];
 }
 
-function estimatedBatteryCapacity(vehicle: EVVehicle) {
-  return clamp(vehicle.estimatedRangeMiles / 3.2, 45, 125);
-}
-
 function connectorPowerCap(vehicleConnectors: ConnectorType[], stationConnectors: ConnectorType[]) {
   const shared = vehicleConnectors.filter(connector => stationConnectors.includes(connector));
   return Math.max(...shared.map(connector => connector === "J1772" ? 19 : connector === "CHAdeMO" ? 100 : 400), 0);
 }
 
 function milesToPercent(miles: number, vehicle: EVVehicle) {
-  return (miles / Math.max(1, vehicle.estimatedRangeMiles)) * 100;
+  return (miles / Math.max(1, effectiveVehicleSpecs(vehicle).estimatedRangeMiles)) * 100;
 }
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));

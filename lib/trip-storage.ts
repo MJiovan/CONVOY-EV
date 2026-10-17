@@ -1,6 +1,8 @@
 "use client";
 
 import type { GroupTrip } from "@/types";
+import { evCatalog } from "@/data/ev-catalog";
+import { vehicleFromCatalog } from "@/lib/vehicle-specs";
 
 const TRIP_KEY = "convoy-ev-active-trip-v1";
 export const TRIP_CHANGED_EVENT = "convoy-ev:trip-changed";
@@ -9,8 +11,28 @@ export function loadTrip(): GroupTrip | null {
   if (typeof window === "undefined") return null;
   try {
     const parsed = JSON.parse(localStorage.getItem(TRIP_KEY) || "null");
-    return isTrip(parsed) ? parsed : null;
+    return isTrip(parsed) ? migrateTrip(parsed) : null;
   } catch { return null; }
+}
+
+function migrateTrip(trip: GroupTrip): GroupTrip {
+  return {
+    ...trip,
+    vehicles: trip.vehicles.map(vehicle => {
+      if (vehicle.catalogVehicleId || vehicle.year || vehicle.trim) return vehicle;
+      const match = evCatalog.find(entry => entry.manufacturer.toLowerCase() === vehicle.manufacturer.toLowerCase() && entry.model.toLowerCase() === vehicle.model.toLowerCase());
+      if (!match) return vehicle;
+      const migrated = vehicleFromCatalog(match, vehicle);
+      return {
+        ...migrated,
+        planningOverrides: {
+          estimatedRangeMiles: vehicle.estimatedRangeMiles,
+          maxChargingSpeedKw: vehicle.maxChargingSpeedKw,
+          connectors: vehicle.connectors,
+        },
+      };
+    }),
+  };
 }
 
 export function saveTrip(trip: GroupTrip) {

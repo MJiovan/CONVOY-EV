@@ -1,14 +1,38 @@
 export type ConnectorType = "NACS" | "CCS" | "CHAdeMO" | "J1772";
 
+export interface EVCatalogEntry {
+  id: string;
+  year: number;
+  manufacturer: string;
+  model: string;
+  trim: string;
+  estimatedRangeMiles: number;
+  maxChargingSpeedKw: number;
+  batteryCapacityKwh: number;
+  connectors: ConnectorType[];
+  isPrototypeData: true;
+}
+
+export interface EVPlanningOverrides {
+  estimatedRangeMiles?: number;
+  maxChargingSpeedKw?: number;
+  connectors?: ConnectorType[];
+}
+
 export interface EVVehicle {
   id: string;
   nickname: string;
+  catalogVehicleId?: string;
+  year?: number;
   manufacturer: string;
   model: string;
+  trim?: string;
   estimatedRangeMiles: number;
   startingBatteryPercent: number;
   maxChargingSpeedKw: number;
+  batteryCapacityKwh?: number;
   connectors: ConnectorType[];
+  planningOverrides?: EVPlanningOverrides;
 }
 
 export interface GroupTrip {
