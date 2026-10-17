@@ -3,8 +3,8 @@ import "./globals.css";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
-  title: "VET NOMAD — Your benefits. Your next home.",
-  description: "Explore whether living overseas could fit your income, goals, and lifestyle.",
+  title: "CONVOY EV — One route for every EV",
+  description: "Plan shared charging stops for a group of different electric vehicles traveling together.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
