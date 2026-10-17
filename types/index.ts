@@ -65,6 +65,8 @@ export interface VehicleStopPlan {
   departureBatteryPercent: number;
   estimatedChargingMinutes: number;
   connectorCompatible: boolean;
+  chargeNeeded: boolean;
+  feasible: boolean;
 }
 
 export interface GroupChargingStop {
@@ -73,6 +75,8 @@ export interface GroupChargingStop {
   groupStopMinutes: number;
   compatibleWithAllVehicles: boolean;
   constrainedVehicleId: string;
+  nextPointLabel: string;
+  nextLegMiles: number;
   reason: string;
 }
 
