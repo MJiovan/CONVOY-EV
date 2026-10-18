@@ -156,9 +156,24 @@ export function searchEVCatalog(query: string, limit = 8) {
 
 export function getCatalogVehicle(id: string | undefined) { return evCatalog.find(vehicle => vehicle.id === id); }
 export function vehicleLabel(vehicle: Pick<EVCatalogEntry, "year" | "manufacturer" | "model" | "trim">) { return `${vehicle.year} ${vehicle.manufacturer} ${vehicle.model} ${vehicle.trim}`; }
+export function getCatalogYears() { return [...new Set(evCatalog.map(vehicle => vehicle.year))].sort((a, b) => b - a); }
+export function getCatalogManufacturers(year: number) {
+  return [...new Set(evCatalog.filter(vehicle => vehicle.year === year).map(vehicle => vehicle.manufacturer))].sort((a, b) => a.localeCompare(b));
+}
+export function getCatalogModels(year: number, manufacturer: string) {
+  return [...new Set(evCatalog.filter(vehicle => vehicle.year === year && vehicle.manufacturer === manufacturer).map(vehicle => vehicle.model))].sort((a, b) => a.localeCompare(b));
+}
+export function getCatalogTrims(year: number, manufacturer: string, model: string) {
+  return [...new Set(evCatalog.filter(vehicle => vehicle.year === year && vehicle.manufacturer === manufacturer && vehicle.model === model).map(vehicle => vehicle.trim))].sort((a, b) => a.localeCompare(b));
+}
+export function getCatalogVehicleBySelection(year: number, manufacturer: string, model: string, trim: string) {
+  return evCatalog.find(vehicle => vehicle.year === year && vehicle.manufacturer === manufacturer && vehicle.model === model && vehicle.trim === trim);
+}
 export const evCatalogStats = {
   totalRecords: evCatalog.length,
   manufacturers: new Set(evCatalog.map(vehicle => vehicle.manufacturer)).size,
+  uniqueModels: new Set(evCatalog.map(vehicle => `${vehicle.manufacturer}|${vehicle.model}`)).size,
+  yearsRepresented: new Set(evCatalog.map(vehicle => vehicle.year)).size,
   earliestYear: Math.min(...evCatalog.map(vehicle => vehicle.year)),
   latestYear: Math.max(...evCatalog.map(vehicle => vehicle.year)),
 };

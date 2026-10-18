@@ -1,21 +1,64 @@
 import assert from "node:assert/strict";
-import { evCatalog, evCatalogStats, getCatalogVehicle, searchEVCatalog, vehicleLabel } from "../data/ev-catalog";
+import { evCatalog, evCatalogStats, getCatalogManufacturers, getCatalogModels, getCatalogTrims, getCatalogVehicle, getCatalogVehicleBySelection, getCatalogYears, searchEVCatalog, vehicleLabel } from "../data/ev-catalog";
 import { calculateGroupPlan } from "../lib/group-planner";
 import { vehicleFromCatalog } from "../lib/vehicle-specs";
 import type { GroupTrip } from "../types";
 
 assert.ok(evCatalogStats.totalRecords >= 150 && evCatalogStats.totalRecords <= 250, "catalog should contain 150–250 records");
 assert.ok(evCatalogStats.manufacturers >= 26, "catalog should represent at least 26 manufacturers");
+assert.equal(evCatalogStats.yearsRepresented, 10, "catalog should represent every model year from 2017 through 2026");
+assert.ok(evCatalogStats.uniqueModels >= 50, "catalog should include broad model coverage");
 assert.equal(new Set(evCatalog.map(vehicle => vehicle.id)).size, evCatalog.length, "catalog IDs must be unique");
 assert.equal(new Set(evCatalog.map(vehicle => `${vehicle.year}|${vehicle.manufacturer}|${vehicle.model}|${vehicle.trim}`)).size, evCatalog.length, "year/make/model/trim combinations must be unique");
 
 for (const vehicle of evCatalog) {
+  assert.ok(vehicle.manufacturer.trim(), `${vehicle.id} needs a manufacturer`);
+  assert.ok(vehicle.model.trim(), `${vehicle.id} needs a model`);
+  assert.ok(vehicle.trim.trim(), `${vehicle.id} needs a trim`);
+  assert.equal(vehicle.manufacturer, vehicle.manufacturer.trim(), `${vehicle.id} manufacturer should not have surrounding whitespace`);
+  assert.equal(vehicle.model, vehicle.model.trim(), `${vehicle.id} model should not have surrounding whitespace`);
+  assert.equal(vehicle.trim, vehicle.trim.trim(), `${vehicle.id} trim should not have surrounding whitespace`);
   assert.ok(vehicle.year >= 2017 && vehicle.year <= 2026, `${vehicle.id} has an unexpected year`);
   assert.ok(vehicle.estimatedRangeMiles > 0, `${vehicle.id} needs a range`);
   assert.ok(vehicle.maxChargingSpeedKw > 0, `${vehicle.id} needs a charging speed`);
   assert.ok(vehicle.batteryCapacityKwh > 0, `${vehicle.id} needs a battery estimate`);
   assert.ok(vehicle.connectors.length > 0, `${vehicle.id} needs a connector`);
   assert.ok(!/hybrid|phev|plug-in/i.test(vehicleLabel(vehicle)), `${vehicle.id} is not battery-only`);
+}
+
+assert.deepEqual(getCatalogYears(), [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017], "year selector should be newest first and unique");
+const makes2024 = getCatalogManufacturers(2024);
+assert.deepEqual(makes2024, [...makes2024].sort((a, b) => a.localeCompare(b)), "make selector should be alphabetical");
+assert.ok(makes2024.includes("Tesla") && makes2024.includes("Porsche"), "2024 should expose makes represented in the catalog");
+assert.deepEqual(getCatalogModels(2022, "Tesla"), ["Model 3", "Model S", "Model X", "Model Y"], "model selector should depend on year and make");
+assert.deepEqual(getCatalogTrims(2022, "Tesla", "Model Y"), ["Long Range AWD", "Performance"], "trim selector should depend on year, make, and model");
+assert.equal(getCatalogVehicleBySelection(2022, "Tesla", "Model Y", "Performance")?.id, "2022-tesla-model-y-performance", "an exact selector path should resolve one catalog record");
+
+const caseVariants = new Map<string, Set<string>>();
+for (const vehicle of evCatalog) {
+  const key = vehicle.manufacturer.toLowerCase();
+  caseVariants.set(key, (caseVariants.get(key) ?? new Set()).add(vehicle.manufacturer));
+}
+assert.ok([...caseVariants.values()].every(values => values.size === 1), "manufacturer names should use consistent casing");
+
+const requiredSelectorPaths: Array<[number, string, string, string]> = [
+  [2022, "Tesla", "Model Y", "Performance"],
+  [2024, "Hyundai", "Ioniq 5", "Limited AWD"],
+  [2023, "Ford", "Mustang Mach-E", "Premium Extended Range AWD"],
+  [2017, "Nissan", "Leaf", "SV"],
+  [2018, "Chevrolet", "Bolt EV", "LT"],
+  [2024, "Rivian", "R1T", "Dual Motor Large Pack"],
+  [2023, "Ford", "F-150 Lightning", "Lariat Extended Range"],
+  [2018, "Tesla", "Model 3", "Long Range AWD"],
+  [2024, "Porsche", "Taycan", "4S"],
+  [2024, "Volkswagen", "ID.4", "Pro S RWD"],
+];
+for (const [year, make, model, trim] of requiredSelectorPaths) {
+  assert.ok(getCatalogYears().includes(year), `${year} should be selectable`);
+  assert.ok(getCatalogManufacturers(year).includes(make), `${make} should be selectable for ${year}`);
+  assert.ok(getCatalogModels(year, make).includes(model), `${model} should be selectable for ${year} ${make}`);
+  assert.ok(getCatalogTrims(year, make, model).includes(trim), `${trim} should be selectable for ${year} ${make} ${model}`);
+  assert.ok(getCatalogVehicleBySelection(year, make, model, trim), `${year} ${make} ${model} ${trim} should resolve to a vehicle`);
 }
 
 const searches: Array<[string, string, string?]> = [
@@ -59,4 +102,4 @@ const plan = calculateGroupPlan(trip);
 assert.ok(plan.stops.length > 0, "catalog selections should produce a group plan");
 assert.ok(plan.compatibilityWarnings.length > 0, "mixed native connectors should produce relevant compatibility warnings");
 
-console.log(`Verified ${evCatalogStats.totalRecords} BEV records across ${evCatalogStats.manufacturers} manufacturers and ${searches.length} required searches.`);
+console.log(`Verified ${evCatalogStats.totalRecords} BEV records, ${evCatalogStats.uniqueModels} unique models, ${evCatalogStats.yearsRepresented} years, ${evCatalogStats.manufacturers} manufacturers, and ${requiredSelectorPaths.length} selector paths.`);
