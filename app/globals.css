@@ -79,3 +79,8 @@ button, a { transition: color .18s ease, background-color .18s ease, border-colo
 .animate-rise { animation: rise .65s cubic-bezier(.2,.7,.2,1) both; }
 
 @media (max-width: 640px) { .container-shell { width: min(100% - 28px, 1180px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}

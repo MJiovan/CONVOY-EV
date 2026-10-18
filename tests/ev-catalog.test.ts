@@ -10,7 +10,7 @@ assert.equal(new Set(evCatalog.map(vehicle => vehicle.id)).size, evCatalog.lengt
 assert.equal(new Set(evCatalog.map(vehicle => `${vehicle.year}|${vehicle.manufacturer}|${vehicle.model}|${vehicle.trim}`)).size, evCatalog.length, "year/make/model/trim combinations must be unique");
 
 for (const vehicle of evCatalog) {
-  assert.ok(vehicle.year >= 2020 && vehicle.year <= 2026, `${vehicle.id} has an unexpected year`);
+  assert.ok(vehicle.year >= 2017 && vehicle.year <= 2026, `${vehicle.id} has an unexpected year`);
   assert.ok(vehicle.estimatedRangeMiles > 0, `${vehicle.id} needs a range`);
   assert.ok(vehicle.maxChargingSpeedKw > 0, `${vehicle.id} needs a charging speed`);
   assert.ok(vehicle.batteryCapacityKwh > 0, `${vehicle.id} needs a battery estimate`);
@@ -39,6 +39,8 @@ for (const [query, manufacturer, model] of searches) {
 }
 
 assert.equal(searchEVCatalog("mach e")[0]?.model, "Mustang Mach-E", "punctuation-insensitive Mach-E search should work");
+assert.equal(searchEVCatalog("2017 nissan leaf sv")[0]?.year, 2017, "older model-year search should work");
+assert.equal(searchEVCatalog("2018 tesla model 3 long range awd")[0]?.year, 2018, "older Tesla model-year search should work");
 assert.equal(searchEVCatalog("2022 model y performance")[0]?.id, "2022-tesla-model-y-performance", "exact year/model/trim should rank first");
 assert.equal(searchEVCatalog("").length, 8, "empty search should show only a small popular selection");
 assert.deepEqual(searchEVCatalog("2023 kia ev6 gt-line")[0]?.connectors, ["CCS"], "pre-transition EV6 should remain native CCS");

@@ -34,7 +34,7 @@ export default function NewTripPage() {
 
   return <main className="min-h-screen bg-[#f4f7f8] pb-16">
     <section className="border-b border-slate-200 bg-white"><div className="container-shell py-9">
-      <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-[#10212b]"><ArrowLeft size={16}/>Back home</Link>
+      <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-[#10212b]"><ArrowLeft size={16}/>Back to dashboard</Link>
       <div className="mt-6 flex flex-col justify-between gap-5 lg:flex-row lg:items-end"><div><p className="eyebrow">New group trip</p><h1 className="mt-3 text-4xl font-extrabold tracking-[-.04em] text-[#10212b] sm:text-5xl">Build your EV convoy.</h1><p className="mt-4 max-w-2xl leading-7 text-slate-500">Choose each EV from the prototype catalog, add its starting battery, and let CONVOY EV load the planning specifications.</p></div><div className="rounded-2xl bg-[#071119] px-5 py-4 text-white"><p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Group size</p><p className="mt-1 text-2xl font-extrabold text-[#b8ff5a]">{trip.vehicles.length} EVs</p></div></div>
     </div></section>
 

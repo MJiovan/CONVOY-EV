@@ -9,6 +9,9 @@ const LEAF: ConnectorType[] = ["CHAdeMO", "J1772"];
 // Data in the UI and should be verified against the exact vehicle before use.
 export const evCatalog: EVCatalogEntry[] = [
   ...brand("Tesla", [
+    [2017,"Model S","75D AWD",259,120,75,NACS],[2018,"Model S","100D AWD",335,120,100,NACS],[2019,"Model S","Long Range AWD",370,200,100,NACS],
+    [2017,"Model X","100D AWD",295,120,100,NACS],[2018,"Model X","100D AWD",295,120,100,NACS],[2019,"Model X","Long Range AWD",325,200,100,NACS],
+    [2017,"Model 3","Long Range RWD",310,170,75,NACS],[2018,"Model 3","Long Range AWD",310,250,75,NACS],[2019,"Model 3","Standard Range Plus",240,170,54,NACS],
     [2020,"Model 3","Standard Range Plus",250,170,54,NACS],[2020,"Model 3","Long Range AWD",322,250,75,NACS],
     [2021,"Model 3","Performance",315,250,78,NACS],[2022,"Model 3","Long Range AWD",358,250,79,NACS],
     [2023,"Model 3","Long Range AWD",333,250,79,NACS,"2023-tesla-model-3-long-range"],[2024,"Model 3","Long Range AWD",341,250,79,NACS],
@@ -36,6 +39,7 @@ export const evCatalog: EVCatalogEntry[] = [
     [2024,"R1S","Dual Motor Max Pack",400,220,149],[2025,"R1S","Dual Standard",270,220,92],
   ]),
   ...brand("Chevrolet", [
+    [2017,"Bolt EV","Premier",238,55,60],[2018,"Bolt EV","LT",238,55,60],[2019,"Bolt EV","Premier",238,55,60],
     [2020,"Bolt EV","LT",259,55,66],[2021,"Bolt EV","Premier",259,55,66],[2022,"Bolt EV","2LT",259,55,65],
     [2023,"Bolt EV","2LT",259,55,65,CCS,"2023-chevrolet-bolt-ev-2lt"],[2022,"Bolt EUV","LT",247,55,65],[2023,"Bolt EUV","Premier",247,55,65],
     [2024,"Blazer EV","LT AWD",279,190,102],[2024,"Blazer EV","RS RWD",324,190,102,CCS,"2024-chevrolet-blazer-ev-rs-rwd"],
@@ -57,6 +61,7 @@ export const evCatalog: EVCatalogEntry[] = [
     [2024,"Air","Touring AWD",411,300,112,CCS,"2024-lucid-air-touring"],[2024,"Air","Grand Touring",485,300,112],[2025,"Gravity","Grand Touring AWD",450,400,123,NACS],
   ]),
   ...brand("Hyundai", [
+    [2019,"Kona Electric","Limited",258,77,64],
     [2021,"Kona Electric","SEL",258,77,64],[2022,"Kona Electric","Limited",258,77,64],[2023,"Kona Electric","Limited",258,77,64],[2024,"Kona Electric","SEL",261,100,64.8],
     [2022,"Ioniq 5","SE RWD",303,235,77.4],[2023,"Ioniq 5","Limited AWD",266,235,77.4],
     [2024,"Ioniq 5","SE RWD",303,235,77.4,CCS,"2024-hyundai-ioniq5-se-rwd"],[2024,"Ioniq 5","Limited AWD",260,235,77.4,CCS,"2024-hyundai-ioniq5-limited-awd"],
@@ -64,12 +69,14 @@ export const evCatalog: EVCatalogEntry[] = [
     [2025,"Ioniq 6","SE Long Range RWD",342,235,77.4],[2026,"Ioniq 9","Long Range AWD",320,235,110.3,NACS],
   ]),
   ...brand("Kia", [
+    [2019,"Niro EV","EX",239,77,64],
     [2020,"Niro EV","EX",239,77,64],[2022,"Niro EV","EX Premium",239,77,64],[2023,"Niro EV","Wave",253,85,64.8],[2024,"Niro EV","Wind",253,85,64.8],
     [2022,"EV6","Wind RWD",310,235,77.4],[2023,"EV6","GT-Line AWD",252,235,77.4],[2024,"EV6","Wind RWD",310,235,77.4,CCS,"2024-kia-ev6-wind-rwd"],
     [2024,"EV6","GT",218,235,77.4,CCS,"2024-kia-ev6-gt"],[2025,"EV6","GT-Line RWD",319,235,84,NACS],
     [2024,"EV9","Light Long Range RWD",304,210,99.8],[2024,"EV9","Land AWD",280,210,99.8],[2025,"EV9","GT-Line AWD",270,210,99.8],
   ]),
   ...brand("Nissan", [
+    [2017,"Leaf","SV",107,50,30,LEAF],[2018,"Leaf","SV",151,50,40,LEAF],[2019,"Leaf","S Plus",226,100,62,LEAF],
     [2020,"Leaf","SV Plus",215,100,62,LEAF],[2021,"Leaf","S Plus",226,100,62,LEAF],[2022,"Leaf","SV Plus",215,100,62,LEAF],
     [2023,"Leaf","SV Plus",212,100,60,LEAF,"2023-nissan-leaf-sv-plus"],[2024,"Leaf","S",149,50,40,LEAF],
     [2023,"Ariya","Venture+ FWD",304,130,91],[2024,"Ariya","Venture+ FWD",304,130,91,CCS,"2024-nissan-ariya-venture-plus"],
@@ -102,6 +109,7 @@ export const evCatalog: EVCatalogEntry[] = [
     [2022,"EQB","300 4MATIC",243,100,70.5],[2024,"EQB","250+",251,100,70.5],
   ]),
   ...brand("Audi", [
+    [2019,"e-tron","Premium Plus",204,150,95],
     [2021,"e-tron","Premium Plus",222,150,95],[2022,"e-tron GT","Premium Plus",238,270,93.4],[2023,"Q4 e-tron","50 quattro",236,150,82],
     [2024,"Q4 e-tron","55 quattro",258,175,82,CCS,"2024-audi-q4-etron-55"],[2024,"Q8 e-tron","Premium quattro",285,170,114],
     [2024,"Q8 Sportback e-tron","Premium Plus",296,170,114],[2025,"Q6 e-tron","Premium quattro",307,270,100],
@@ -125,7 +133,7 @@ export const evCatalog: EVCatalogEntry[] = [
   ]),
   ...brand("MINI", [[2020,"Cooper SE","Signature",110,50,32.6],[2021,"Cooper SE","Iconic",114,50,32.6],[2022,"Cooper SE","Signature Plus",114,50,32.6],[2024,"Cooper SE","Iconic",114,50,32.6],[2025,"Countryman Electric","SE ALL4",245,130,66.5]]),
   ...brand("Fiat", [[2024,"500e","INSPI(RED)",149,85,42],[2024,"500e","Inspired By Beauty",149,85,42],[2025,"500e","Inspired By Music",149,85,42]]),
-  ...brand("Jaguar", [[2020,"I-PACE","SE AWD",234,100,90],[2021,"I-PACE","HSE AWD",234,100,90],[2022,"I-PACE","HSE AWD",222,100,90],[2024,"I-PACE","R-Dynamic HSE AWD",246,100,90]]),
+  ...brand("Jaguar", [[2019,"I-PACE","HSE AWD",234,100,90],[2020,"I-PACE","SE AWD",234,100,90],[2021,"I-PACE","HSE AWD",234,100,90],[2022,"I-PACE","HSE AWD",222,100,90],[2024,"I-PACE","R-Dynamic HSE AWD",246,100,90]]),
 ];
 
 const popularVehicleIds = [
