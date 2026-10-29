@@ -4,6 +4,7 @@ import { demoRoutePlanningProvider } from "@/providers/demo/route-provider";
 import { demoChargingStationProvider } from "@/providers/demo/station-provider";
 import { demoVehicleSpecificationProvider } from "@/providers/demo/vehicle-provider";
 import { demoEnergyCalculationProvider } from "@/providers/demo/energy-provider";
+import { openRouteServiceRouteProvider } from "@/providers/live/openrouteservice-provider";
 
 export const demoProviderSet: ProviderSet = {
   mode: "demo",
@@ -13,7 +14,15 @@ export const demoProviderSet: ProviderSet = {
   energyCalculations: demoEnergyCalculationProvider,
 };
 
-const providerRegistry = new Map<ProviderMode, ProviderSet>([["demo", demoProviderSet]]);
+export const liveProviderSet: ProviderSet = {
+  mode: "live",
+  routePlanning: openRouteServiceRouteProvider,
+  chargingStations: demoChargingStationProvider,
+  vehicleSpecifications: demoVehicleSpecificationProvider,
+  energyCalculations: demoEnergyCalculationProvider,
+};
+
+const providerRegistry = new Map<ProviderMode, ProviderSet>([["demo", demoProviderSet], ["live", liveProviderSet]]);
 
 export function registerProviderSet(providerSet: ProviderSet) {
   providerRegistry.set(providerSet.mode, providerSet);
@@ -37,6 +46,16 @@ export async function createPlanningInputs(trip: GroupTrip, providerSet: Provide
 
 export function createDemoPlanningInputs(trip: GroupTrip): GroupPlanningInputs {
   const route = demoRoutePlanningProvider.planRoute({
+    originLabel: trip.startingLocation,
+    destinationLabel: trip.destination,
+    distanceHintMiles: trip.totalDistanceMiles,
+  });
+  const stations = demoChargingStationProvider.findStations({ route, vehicles: trip.vehicles });
+  return { route, stations, energyCalculations: demoEnergyCalculationProvider };
+}
+
+export function createSavedPlanningInputs(trip: GroupTrip): GroupPlanningInputs {
+  const route = trip.route ?? demoRoutePlanningProvider.planRoute({
     originLabel: trip.startingLocation,
     destinationLabel: trip.destination,
     distanceHintMiles: trip.totalDistanceMiles,

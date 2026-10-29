@@ -54,6 +54,7 @@ function isTrip(value: unknown): value is GroupTrip {
     && typeof trip.destination === "string"
     && typeof trip.totalDistanceMiles === "number"
     && trip.totalDistanceMiles > 0
+    && (trip.route === undefined || isStoredRoute(trip.route))
     && Array.isArray(trip.vehicles)
     && trip.vehicles.length >= 2
     && trip.vehicles.every(vehicle => typeof vehicle.id === "string"
@@ -63,4 +64,16 @@ function isTrip(value: unknown): value is GroupTrip {
       && typeof vehicle.maxChargingSpeedKw === "number"
       && Array.isArray(vehicle.connectors)
       && vehicle.connectors.length > 0);
+}
+
+function isStoredRoute(value: unknown) {
+  if (!value || typeof value !== "object") return false;
+  const route = value as NonNullable<GroupTrip["route"]>;
+  return typeof route.originLabel === "string"
+    && typeof route.destinationLabel === "string"
+    && typeof route.totalDistanceMiles === "number"
+    && route.totalDistanceMiles > 0
+    && typeof route.estimatedDrivingMinutes === "number"
+    && Array.isArray(route.legs)
+    && Boolean(route.source && typeof route.source.providerId === "string");
 }

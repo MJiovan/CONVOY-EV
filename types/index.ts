@@ -1,4 +1,37 @@
 export type ConnectorType = "NACS" | "CCS" | "CHAdeMO" | "J1772";
+export type ProviderMode = "demo" | "live";
+export type RouteCoordinate = [longitude: number, latitude: number];
+
+export interface ProviderSource {
+  mode: ProviderMode;
+  providerId: string;
+  label: string;
+  isDemoData: boolean;
+  retrievedAt?: string;
+}
+
+export interface RouteLeg {
+  id: string;
+  startLabel: string;
+  endLabel: string;
+  distanceMiles: number;
+  estimatedDrivingMinutes: number;
+}
+
+export interface RouteGeometry {
+  type: "LineString";
+  coordinates: RouteCoordinate[];
+}
+
+export interface PlannedRoute {
+  originLabel: string;
+  destinationLabel: string;
+  totalDistanceMiles: number;
+  estimatedDrivingMinutes: number;
+  legs: RouteLeg[];
+  geometry?: RouteGeometry;
+  source: ProviderSource;
+}
 
 export interface EVCatalogEntry {
   id: string;
@@ -41,6 +74,7 @@ export interface GroupTrip {
   startingLocation: string;
   destination: string;
   totalDistanceMiles: number;
+  route?: PlannedRoute;
   vehicles: EVVehicle[];
   createdAt: string;
   updatedAt: string;

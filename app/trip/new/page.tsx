@@ -3,13 +3,15 @@
 import { FormEvent, KeyboardEvent, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight, BatteryCharging, Cable, CarFront, ChevronDown, MapPin, Plus, RotateCcw, Search, Trash2, UsersRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, BatteryCharging, Cable, CarFront, ChevronDown, LoaderCircle, MapPin, Plus, RotateCcw, Route, Search, Trash2, UsersRound } from "lucide-react";
 import { DemoDataBadge } from "@/components/DemoDataBadge";
 import { connectorTypes, createSampleTrip } from "@/data/demo-route";
 import { demoVehicleSpecificationProvider } from "@/providers/demo/vehicle-provider";
 import { saveTrip } from "@/lib/trip-storage";
 import { effectiveVehicleSpecs, vehicleDisplayName, vehicleFromCatalog } from "@/lib/vehicle-specs";
-import type { ConnectorType, EVCatalogEntry, EVVehicle, GroupTrip } from "@/types";
+import { getProviderSet } from "@/providers";
+import { RoutePlanningError } from "@/providers/live/openrouteservice-provider";
+import type { ConnectorType, EVCatalogEntry, EVVehicle, GroupTrip, PlannedRoute } from "@/types";
 
 const vehicleSpecifications = demoVehicleSpecificationProvider;
 
@@ -17,7 +19,15 @@ export default function NewTripPage() {
   const router = useRouter();
   const [trip, setTrip] = useState<GroupTrip>(() => createSampleTrip());
   const [notice, setNotice] = useState("");
-  const updateTrip = (key: keyof GroupTrip, value: string | number) => setTrip(current => ({ ...current, [key]: value }));
+  const [routing, setRouting] = useState(false);
+  const [demoFallbackAvailable, setDemoFallbackAvailable] = useState(false);
+  const updateTrip = (key: "name" | "startingLocation" | "destination", value: string) => {
+    setTrip(current => ({ ...current, [key]: value, ...(key === "startingLocation" || key === "destination" ? { route: undefined } : {}) }));
+    if (key === "startingLocation" || key === "destination") {
+      setNotice("");
+      setDemoFallbackAvailable(false);
+    }
+  };
   const replaceVehicle = (next: EVVehicle) => setTrip(current => ({ ...current, vehicles: current.vehicles.map(vehicle => vehicle.id === next.id ? next : vehicle) }));
   const addVehicle = () => setTrip(current => ({ ...current, vehicles: [...current.vehicles, blankVehicle(current.vehicles.length + 1)] }));
   const removeVehicle = (id: string) => {
@@ -25,13 +35,35 @@ export default function NewTripPage() {
     setNotice("");
     setTrip(current => ({ ...current, vehicles: current.vehicles.filter(vehicle => vehicle.id !== id) }));
   };
-  const submit = (event: FormEvent) => {
+  const savePreparedTrip = (route?: PlannedRoute) => {
+    const now = new Date().toISOString();
+    saveTrip({
+      ...trip,
+      id: `trip-${Date.now()}`,
+      createdAt: now,
+      updatedAt: now,
+      route,
+      totalDistanceMiles: route?.totalDistanceMiles ?? Math.max(25, trip.totalDistanceMiles),
+    });
+    router.push("/trip");
+  };
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (trip.vehicles.some(vehicle => !vehicle.catalogVehicleId)) return setNotice("Select a catalog vehicle for every driver.");
     if (trip.vehicles.some(vehicle => effectiveVehicleSpecs(vehicle).connectors.length === 0)) return setNotice("Choose at least one connector for every EV.");
-    const now = new Date().toISOString();
-    saveTrip({ ...trip, id: `trip-${Date.now()}`, createdAt: now, updatedAt: now, totalDistanceMiles: Math.max(25, trip.totalDistanceMiles) });
-    router.push("/trip");
+    setNotice("");
+    setDemoFallbackAvailable(false);
+    setRouting(true);
+    try {
+      const route = await getProviderSet("live").routePlanning.planRoute({ originLabel: trip.startingLocation, destinationLabel: trip.destination });
+      savePreparedTrip(route);
+    } catch (error) {
+      const message = error instanceof RoutePlanningError ? error.message : "Real-world routing is temporarily unavailable.";
+      setNotice(`${message} No trip was saved yet.`);
+      setDemoFallbackAvailable(true);
+    } finally {
+      setRouting(false);
+    }
   };
 
   return <main className="min-h-screen bg-[#f4f7f8] pb-16">
@@ -41,14 +73,14 @@ export default function NewTripPage() {
     </div></section>
 
     <form onSubmit={submit} className="container-shell py-8">
-      <section className="rounded-[26px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8"><SectionHeading icon={<MapPin/>} step="01" title="Where is the group going?" copy="Route distance is manually entered Demo Data until a real routing API is connected."/><div className="mt-7 grid gap-5 md:grid-cols-2"><TextField label="Trip name" ariaLabel="Trip name" value={trip.name} onChange={value => updateTrip("name", value)}/><NumberField label="Estimated route distance" ariaLabel="Estimated route distance" value={trip.totalDistanceMiles} suffix="miles" min={25} onChange={value => updateTrip("totalDistanceMiles", value)}/><TextField label="Starting location" ariaLabel="Starting location" value={trip.startingLocation} onChange={value => updateTrip("startingLocation", value)}/><TextField label="Destination" ariaLabel="Destination" value={trip.destination} onChange={value => updateTrip("destination", value)}/></div></section>
+      <section className="rounded-[26px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8"><SectionHeading icon={<MapPin/>} step="01" title="Where is the group going?" copy="Enter the locations and CONVOY EV will calculate the road distance and estimated drive time before building the charging plan."/><div className="mt-7 grid gap-5 md:grid-cols-2"><TextField label="Trip name" ariaLabel="Trip name" value={trip.name} onChange={value => updateTrip("name", value)}/><div className="flex items-center gap-3 rounded-2xl border border-[#ccecf7] bg-[#f2fbfe] p-4"><span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#dff5fc] text-[#137da3]"><Route size={19}/></span><div><p className="text-sm font-extrabold text-[#10212b]">Automatic road routing</p><p className="mt-1 text-xs text-slate-500">Distance, drive time, and route geometry via openrouteservice</p></div></div><TextField label="Starting location" ariaLabel="Starting location" value={trip.startingLocation} onChange={value => updateTrip("startingLocation", value)}/><TextField label="Destination" ariaLabel="Destination" value={trip.destination} onChange={value => updateTrip("destination", value)}/></div></section>
 
       <section className="mt-6 rounded-[26px] border border-slate-200 bg-white p-6 shadow-sm sm:p-8"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start"><div><SectionHeading icon={<UsersRound/>} step="02" title="Who&apos;s driving with you?" copy="Choose each EV by year, make, model, and trim. Catalog values remain editable for real-world planning conditions."/><div className="mt-3 flex items-center gap-2"><DemoDataBadge/><span className="text-xs text-slate-400">Local prototype EV specifications—not live vehicle data</span></div></div><button type="button" onClick={addVehicle} className="btn-outline self-start"><Plus size={16}/>Add another EV</button></div>
         <div className="mt-7 space-y-5">{trip.vehicles.map((vehicle, index) => <VehicleEditor key={vehicle.id} vehicle={vehicle} index={index} canRemove={trip.vehicles.length > 2} onChange={replaceVehicle} onRemove={() => removeVehicle(vehicle.id)}/>)}</div>
       </section>
 
-      {notice && <p role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">{notice}</p>}
-      <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-[24px] bg-[#0e2835] p-6 text-white sm:flex-row sm:items-center"><div><p className="text-sm font-bold">Ready to calculate one shared plan?</p><p className="mt-1 text-xs text-white/50">The most constrained EV will influence the group&apos;s first charging stop.</p></div><button type="submit" className="btn-electric w-full justify-center sm:w-auto">Create group charging plan <ArrowRight size={17}/></button></div>
+      {notice && <div role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800"><p>{notice}</p>{demoFallbackAvailable && <button type="button" onClick={() => savePreparedTrip()} className="btn-dark mt-4">Continue with {trip.totalDistanceMiles}-mile Demo Route <ArrowRight size={16}/></button>}</div>}
+      <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-[24px] bg-[#0e2835] p-6 text-white sm:flex-row sm:items-center"><div><p className="text-sm font-bold">Ready to calculate one shared plan?</p><p className="mt-1 text-xs text-white/50">The route is calculated first, then the most constrained EV determines the shared charging plan.</p></div><button type="submit" disabled={routing} aria-busy={routing} className="btn-electric w-full justify-center disabled:cursor-wait disabled:opacity-70 sm:w-auto">{routing ? <LoaderCircle className="animate-spin" size={17}/> : <ArrowRight size={17}/>} {routing ? "Calculating road route…" : "Create group charging plan"}</button></div>
     </form>
   </main>;
 }

@@ -6,7 +6,7 @@ import { DemoDataBadge } from "@/components/DemoDataBadge";
 import { createSampleTrip } from "@/data/demo-route";
 import { calculateGroupPlan, formatDuration } from "@/lib/group-planner";
 import { loadTrip, saveTrip } from "@/lib/trip-storage";
-import { createDemoPlanningInputs } from "@/providers";
+import { createSavedPlanningInputs } from "@/providers";
 import type { GroupChargingPlan, GroupChargingStop, GroupTrip } from "@/types";
 
 export default function TripDashboardPage() {
@@ -26,13 +26,14 @@ export default function TripDashboardPage() {
       const initial = saved ?? createSampleTrip();
       setTrip(initial);
       setDraftSoc(Object.fromEntries(initial.vehicles.map(vehicle => [vehicle.id, vehicle.startingBatteryPercent])));
-      setUsingDemo(!saved);
+      setUsingDemo(!saved || !saved.route || saved.route.source.isDemoData);
       setReady(true);
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
-  const plan = useMemo(() => calculateGroupPlan(trip, createDemoPlanningInputs(trip)), [trip]);
+  const planningInputs = useMemo(() => createSavedPlanningInputs(trip), [trip]);
+  const plan = useMemo(() => calculateGroupPlan(trip, planningInputs), [trip, planningInputs]);
   const hasChanges = trip.vehicles.some(vehicle => draftSoc[vehicle.id] !== undefined && draftSoc[vehicle.id] !== vehicle.startingBatteryPercent);
 
   const recalculate = () => {
@@ -44,11 +45,11 @@ export default function TripDashboardPage() {
       updatedAt: new Date().toISOString(),
       vehicles: trip.vehicles.map(vehicle => ({ ...vehicle, startingBatteryPercent: Math.max(1, Math.min(100, draftSoc[vehicle.id] ?? vehicle.startingBatteryPercent)) })),
     };
-    const nextPlan = calculateGroupPlan(next, createDemoPlanningInputs(next));
+    const nextPlan = calculateGroupPlan(next, createSavedPlanningInputs(next));
     window.setTimeout(() => {
       setTrip(next);
       saveTrip(next);
-      setUsingDemo(false);
+      setUsingDemo(!next.route || next.route.source.isDemoData);
       setFeedback(describeChanges(plan, nextPlan));
       setSelectedStop(null);
       setExpandedStops(new Set());
@@ -66,7 +67,7 @@ export default function TripDashboardPage() {
 
   return <main className="min-h-screen bg-[#f4f7f8] pb-16">
     <section className="bg-[#071119] text-white"><div className="container-shell py-10 sm:py-14">
-      <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end"><div><div className="flex flex-wrap items-center gap-3"><p className="text-xs font-bold uppercase tracking-[.17em] text-[#68d5ff]">Trip plan</p>{usingDemo && <DemoDataBadge inverse/>}</div><h1 className="mt-3 text-4xl font-extrabold tracking-[-.045em] sm:text-5xl">{trip.name}</h1><p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/55"><span className="inline-flex items-center gap-2"><MapPin size={15}/>{trip.startingLocation}</span><ArrowRight size={15}/><span>{trip.destination}</span></p></div><div className={`rounded-2xl border px-5 py-4 ${statusStyle(plan.groupStatus)}`}><p className="text-[10px] font-bold uppercase tracking-wider text-white/45">Group status</p><p className="mt-1 text-xl font-extrabold">{plan.groupStatus}</p></div></div>
+      <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-end"><div><div className="flex flex-wrap items-center gap-3"><p className="text-xs font-bold uppercase tracking-[.17em] text-[#68d5ff]">Trip plan</p>{usingDemo && <DemoDataBadge inverse/>}</div><h1 className="mt-3 text-4xl font-extrabold tracking-[-.045em] sm:text-5xl">{trip.name}</h1><p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/55"><span className="inline-flex items-center gap-2"><MapPin size={15}/>{trip.startingLocation}</span><ArrowRight size={15}/><span>{trip.destination}</span></p><p className="mt-3 text-xs font-semibold text-white/45">Estimated drive {formatDuration(plan.estimatedDrivingMinutes)} · {planningInputs.route.source.isDemoData ? "Demo route" : `${planningInputs.route.source.label} road route`}</p></div><div className={`rounded-2xl border px-5 py-4 ${statusStyle(plan.groupStatus)}`}><p className="text-[10px] font-bold uppercase tracking-wider text-white/45">Group status</p><p className="mt-1 text-xl font-extrabold">{plan.groupStatus}</p></div></div>
       <TripTimeline trip={trip} plan={plan} selectedStop={selectedStop} onSelect={focusStop}/>
     </div></section>
 

@@ -13,6 +13,7 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "test:catalog": "tsx tests/ev-catalog.test.ts",
     "test:planner": "tsx tests/group-planner.test.ts",
+    "test:routing": "tsx tests/route-provider.test.ts",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate"
   },

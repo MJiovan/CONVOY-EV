@@ -1,32 +1,6 @@
-import type { ChargingStation, EVCatalogEntry, EVVehicle } from "@/types";
+import type { ChargingStation, EVCatalogEntry, EVVehicle, PlannedRoute, ProviderMode, ProviderSource } from "@/types";
 
-export type ProviderMode = "demo" | "live";
 export type Awaitable<T> = T | Promise<T>;
-
-export interface ProviderSource {
-  mode: ProviderMode;
-  providerId: string;
-  label: string;
-  isDemoData: boolean;
-  retrievedAt?: string;
-}
-
-export interface RouteLeg {
-  id: string;
-  startLabel: string;
-  endLabel: string;
-  distanceMiles: number;
-  estimatedDrivingMinutes: number;
-}
-
-export interface PlannedRoute {
-  originLabel: string;
-  destinationLabel: string;
-  totalDistanceMiles: number;
-  estimatedDrivingMinutes: number;
-  legs: RouteLeg[];
-  source: ProviderSource;
-}
 
 export interface RoutePlanningRequest {
   originLabel: string;
@@ -98,3 +72,5 @@ export interface ProviderSet {
   vehicleSpecifications: VehicleSpecificationProvider;
   energyCalculations: EnergyCalculationProvider;
 }
+
+export type { PlannedRoute, ProviderMode, ProviderSource, RouteLeg } from "@/types";
