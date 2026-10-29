@@ -6,6 +6,7 @@ import { DemoDataBadge } from "@/components/DemoDataBadge";
 import { createSampleTrip } from "@/data/demo-route";
 import { calculateGroupPlan, formatDuration } from "@/lib/group-planner";
 import { loadTrip, saveTrip } from "@/lib/trip-storage";
+import { createDemoPlanningInputs } from "@/providers";
 import type { GroupChargingPlan, GroupChargingStop, GroupTrip } from "@/types";
 
 export default function TripDashboardPage() {
@@ -31,7 +32,7 @@ export default function TripDashboardPage() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  const plan = useMemo(() => calculateGroupPlan(trip), [trip]);
+  const plan = useMemo(() => calculateGroupPlan(trip, createDemoPlanningInputs(trip)), [trip]);
   const hasChanges = trip.vehicles.some(vehicle => draftSoc[vehicle.id] !== undefined && draftSoc[vehicle.id] !== vehicle.startingBatteryPercent);
 
   const recalculate = () => {
@@ -43,7 +44,7 @@ export default function TripDashboardPage() {
       updatedAt: new Date().toISOString(),
       vehicles: trip.vehicles.map(vehicle => ({ ...vehicle, startingBatteryPercent: Math.max(1, Math.min(100, draftSoc[vehicle.id] ?? vehicle.startingBatteryPercent)) })),
     };
-    const nextPlan = calculateGroupPlan(next);
+    const nextPlan = calculateGroupPlan(next, createDemoPlanningInputs(next));
     window.setTimeout(() => {
       setTrip(next);
       saveTrip(next);

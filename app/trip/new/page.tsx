@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, BatteryCharging, Cable, CarFront, ChevronDown, MapPin, Plus, RotateCcw, Search, Trash2, UsersRound } from "lucide-react";
 import { DemoDataBadge } from "@/components/DemoDataBadge";
 import { connectorTypes, createSampleTrip } from "@/data/demo-route";
-import { getCatalogManufacturers, getCatalogModels, getCatalogTrims, getCatalogVehicle, getCatalogVehicleBySelection, getCatalogYears, searchEVCatalog, vehicleLabel } from "@/data/ev-catalog";
+import { demoVehicleSpecificationProvider } from "@/providers/demo/vehicle-provider";
 import { saveTrip } from "@/lib/trip-storage";
 import { effectiveVehicleSpecs, vehicleDisplayName, vehicleFromCatalog } from "@/lib/vehicle-specs";
 import type { ConnectorType, EVCatalogEntry, EVVehicle, GroupTrip } from "@/types";
+
+const vehicleSpecifications = demoVehicleSpecificationProvider;
 
 export default function NewTripPage() {
   const router = useRouter();
@@ -52,7 +54,7 @@ export default function NewTripPage() {
 }
 
 function VehicleEditor({ vehicle, index, canRemove, onChange, onRemove }: { vehicle: EVVehicle; index: number; canRemove: boolean; onChange: (vehicle: EVVehicle) => void; onRemove: () => void }) {
-  const initialCatalogVehicle = getCatalogVehicle(vehicle.catalogVehicleId);
+  const initialCatalogVehicle = vehicleSpecifications.getVehicle(vehicle.catalogVehicleId);
   const [year, setYear] = useState(initialCatalogVehicle?.year ? String(initialCatalogVehicle.year) : "");
   const [manufacturer, setManufacturer] = useState(initialCatalogVehicle?.manufacturer ?? "");
   const [model, setModel] = useState(initialCatalogVehicle?.model ?? "");
@@ -62,11 +64,11 @@ function VehicleEditor({ vehicle, index, canRemove, onChange, onRemove }: { vehi
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [editingSpecs, setEditingSpecs] = useState(Boolean(vehicle.planningOverrides));
-  const results = useMemo(() => searchEVCatalog(query), [query]);
-  const years = useMemo(() => getCatalogYears(), []);
-  const manufacturers = useMemo(() => year ? getCatalogManufacturers(Number(year)) : [], [year]);
-  const models = useMemo(() => year && manufacturer ? getCatalogModels(Number(year), manufacturer) : [], [year, manufacturer]);
-  const trims = useMemo(() => year && manufacturer && model ? getCatalogTrims(Number(year), manufacturer, model) : [], [year, manufacturer, model]);
+  const results = useMemo(() => vehicleSpecifications.searchVehicles(query), [query]);
+  const years = useMemo(() => vehicleSpecifications.getYears(), []);
+  const manufacturers = useMemo(() => year ? vehicleSpecifications.getManufacturers(Number(year)) : [], [year]);
+  const models = useMemo(() => year && manufacturer ? vehicleSpecifications.getModels(Number(year), manufacturer) : [], [year, manufacturer]);
+  const trims = useMemo(() => year && manufacturer && model ? vehicleSpecifications.getTrims(Number(year), manufacturer, model) : [], [year, manufacturer, model]);
   const specs = effectiveVehicleSpecs(vehicle);
   const selectVehicle = (entry: EVCatalogEntry) => {
     const next = vehicleFromCatalog(entry, vehicle);
@@ -75,7 +77,7 @@ function VehicleEditor({ vehicle, index, canRemove, onChange, onRemove }: { vehi
     setManufacturer(entry.manufacturer);
     setModel(entry.model);
     setTrim(entry.trim);
-    setQuery(vehicleLabel(entry));
+    setQuery(vehicleSpecifications.labelVehicle(entry));
     setOpen(false);
     setActiveIndex(0);
     setEditingSpecs(false);
@@ -106,7 +108,7 @@ function VehicleEditor({ vehicle, index, canRemove, onChange, onRemove }: { vehi
   };
   const chooseTrim = (value: string) => {
     setTrim(value);
-    const entry = getCatalogVehicleBySelection(Number(year), manufacturer, model, value);
+    const entry = vehicleSpecifications.getVehicleBySelection(Number(year), manufacturer, model, value);
     if (entry) selectVehicle(entry);
     else clearCatalogVehicle();
   };
@@ -117,7 +119,7 @@ function VehicleEditor({ vehicle, index, canRemove, onChange, onRemove }: { vehi
     onChange({ ...vehicle, connectors, planningOverrides: { ...vehicle.planningOverrides, connectors } });
   };
   const resetOverrides = () => {
-    const catalogVehicle = getCatalogVehicle(vehicle.catalogVehicleId);
+    const catalogVehicle = vehicleSpecifications.getVehicle(vehicle.catalogVehicleId);
     onChange(catalogVehicle ? vehicleFromCatalog(catalogVehicle, vehicle) : { ...vehicle, planningOverrides: undefined });
     setEditingSpecs(false);
   };

@@ -1,7 +1,7 @@
 "use client";
 
 import type { GroupTrip } from "@/types";
-import { evCatalog } from "@/data/ev-catalog";
+import { demoVehicleSpecificationProvider } from "@/providers/demo/vehicle-provider";
 import { vehicleFromCatalog } from "@/lib/vehicle-specs";
 
 const TRIP_KEY = "convoy-ev-active-trip-v1";
@@ -20,7 +20,7 @@ function migrateTrip(trip: GroupTrip): GroupTrip {
     ...trip,
     vehicles: trip.vehicles.map(vehicle => {
       if (vehicle.catalogVehicleId || vehicle.year || vehicle.trim) return vehicle;
-      const match = evCatalog.find(entry => entry.manufacturer.toLowerCase() === vehicle.manufacturer.toLowerCase() && entry.model.toLowerCase() === vehicle.model.toLowerCase());
+      const match = demoVehicleSpecificationProvider.listVehicles().find(entry => entry.manufacturer.toLowerCase() === vehicle.manufacturer.toLowerCase() && entry.model.toLowerCase() === vehicle.model.toLowerCase());
       if (!match) return vehicle;
       const migrated = vehicleFromCatalog(match, vehicle);
       return {

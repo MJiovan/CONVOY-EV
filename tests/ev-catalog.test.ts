@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { evCatalog, evCatalogStats, getCatalogManufacturers, getCatalogModels, getCatalogTrims, getCatalogVehicle, getCatalogVehicleBySelection, getCatalogYears, searchEVCatalog, vehicleLabel } from "../data/ev-catalog";
 import { calculateGroupPlan } from "../lib/group-planner";
 import { vehicleFromCatalog } from "../lib/vehicle-specs";
+import { createDemoPlanningInputs } from "../providers";
 import type { GroupTrip } from "../types";
 
 assert.ok(evCatalogStats.totalRecords >= 150 && evCatalogStats.totalRecords <= 250, "catalog should contain 150–250 records");
@@ -98,7 +99,7 @@ assert.equal(new Set(selected.map(vehicle => vehicle.estimatedRangeMiles)).size,
 assert.ok(selected[2].connectors.includes("CHAdeMO"), "Leaf connector data should reach selected vehicle specs");
 
 const trip: GroupTrip = { id: "catalog-test", name: "Catalog test", startingLocation: "Richmond, VA", destination: "Charlotte, NC", totalDistanceMiles: 293, vehicles: selected, createdAt: new Date(0).toISOString(), updatedAt: new Date(0).toISOString() };
-const plan = calculateGroupPlan(trip);
+const plan = calculateGroupPlan(trip, createDemoPlanningInputs(trip));
 assert.ok(plan.stops.length > 0, "catalog selections should produce a group plan");
 assert.ok(plan.compatibilityWarnings.length > 0, "mixed native connectors should produce relevant compatibility warnings");
 

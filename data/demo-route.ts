@@ -1,6 +1,6 @@
 import type { ChargingStation, ConnectorType, GroupTrip } from "@/types";
-import { getCatalogVehicle } from "@/data/ev-catalog";
 import { vehicleFromCatalog } from "@/lib/vehicle-specs";
+import { demoVehicleSpecificationProvider } from "@/providers/demo/vehicle-provider";
 
 export const connectorTypes: ConnectorType[] = ["NACS", "CCS", "CHAdeMO", "J1772"];
 
@@ -23,9 +23,9 @@ export function buildDemoStations(totalDistanceMiles: number): ChargingStation[]
 
 export function createSampleTrip(): GroupTrip {
   const now = new Date().toISOString();
-  const jio = getCatalogVehicle("2022-tesla-model-y-performance")!;
-  const alex = getCatalogVehicle("2024-hyundai-ioniq5-limited-awd")!;
-  const chris = getCatalogVehicle("2023-ford-mach-e-premium-awd")!;
+  const jio = demoVehicleSpecificationProvider.getVehicle("2022-tesla-model-y-performance")!;
+  const alex = demoVehicleSpecificationProvider.getVehicle("2024-hyundai-ioniq5-limited-awd")!;
+  const chris = demoVehicleSpecificationProvider.getVehicle("2023-ford-mach-e-premium-awd")!;
   return {
     id: "demo-convoy",
     name: "Desert Weekend Convoy",

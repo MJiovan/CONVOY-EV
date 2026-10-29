@@ -1,12 +1,14 @@
-import { buildDemoStations } from "@/data/demo-route";
 import { effectiveVehicleSpecs, vehicleDisplayName } from "@/lib/vehicle-specs";
-import type { ChargingStation, CompatibilityWarning, ConnectorType, EVVehicle, GroupChargingPlan, GroupChargingStop, GroupTrip, VehicleStopPlan } from "@/types";
+import { DEMO_ENERGY_CONFIG } from "@/providers/demo/energy-provider";
+import { DEMO_ROUTE_SPEED_MPH } from "@/providers/demo/route-provider";
+import type { EnergyCalculationProvider, GroupPlanningInputs } from "@/providers/contracts";
+import type { ChargingStation, CompatibilityWarning, EVVehicle, GroupChargingPlan, GroupChargingStop, GroupTrip, VehicleStopPlan } from "@/types";
 
 export const PLANNER_CONFIG = {
-  reservePercent: 12,
-  planningBufferPercent: 1,
-  chargingTaperFactor: 0.72,
-  routeSpeedMph: 62,
+  reservePercent: DEMO_ENERGY_CONFIG.reservePercent,
+  planningBufferPercent: DEMO_ENERGY_CONFIG.planningBufferPercent,
+  chargingTaperFactor: DEMO_ENERGY_CONFIG.chargingTaperFactor,
+  routeSpeedMph: DEMO_ROUTE_SPEED_MPH,
   maxStops: 8,
   minimumStationGapMiles: 8,
 } as const;
@@ -14,28 +16,28 @@ export const PLANNER_CONFIG = {
 type VehicleState = { vehicle: EVVehicle; batteryPercent: number };
 type RouteSelection = { stations: ChargingStation[]; originChargeRequired: boolean; blockedWarning?: CompatibilityWarning };
 
-export function calculateGroupPlan(trip: GroupTrip): GroupChargingPlan {
-  const stations = buildDemoStations(trip.totalDistanceMiles);
+export function calculateGroupPlan(trip: GroupTrip, inputs: GroupPlanningInputs): GroupChargingPlan {
+  const { route, stations, energyCalculations } = inputs;
   const states: VehicleState[] = trip.vehicles.map(vehicle => ({ vehicle, batteryPercent: clamp(vehicle.startingBatteryPercent, 0, 100) }));
-  const initialConstraint = findConstraint(states);
+  const initialConstraint = findConstraint(states, energyCalculations);
   const warnings = buildCompatibilityWarnings(stations, trip.vehicles);
-  const route = selectSharedStations(trip, stations, states);
-  if (route.blockedWarning) warnings.unshift(route.blockedWarning);
+  const routeSelection = selectSharedStations(trip, route.totalDistanceMiles, stations, states, energyCalculations);
+  if (routeSelection.blockedWarning) warnings.unshift(routeSelection.blockedWarning);
 
-  const selectedStops = route.originChargeRequired ? [originStation(trip), ...route.stations] : route.stations;
+  const selectedStops = routeSelection.originChargeRequired ? [originStation(trip, route.source.isDemoData), ...routeSelection.stations] : routeSelection.stations;
   const stops: GroupChargingStop[] = [];
   let previousDistance = 0;
-  let routeBlocked = Boolean(route.blockedWarning);
+  let routeBlocked = Boolean(routeSelection.blockedWarning);
 
   selectedStops.forEach((station, index) => {
     const inboundLegMiles = station.distanceMiles - previousDistance;
-    if (inboundLegMiles > 0) states.forEach(state => { state.batteryPercent -= milesToPercent(inboundLegMiles, state.vehicle); });
+    if (inboundLegMiles > 0) states.forEach(state => { state.batteryPercent -= energyCalculations.batteryPercentForDistance(state.vehicle, inboundLegMiles); });
 
     const nextStation = selectedStops[index + 1];
-    const nextPointDistance = nextStation?.distanceMiles ?? trip.totalDistanceMiles;
+    const nextPointDistance = nextStation?.distanceMiles ?? route.totalDistanceMiles;
     const nextPointLabel = nextStation?.name ?? trip.destination;
     const nextLegMiles = Math.max(0, nextPointDistance - station.distanceMiles);
-    const vehiclePlans = states.map(state => createVehicleStopPlan(state, station, nextLegMiles));
+    const vehiclePlans = states.map(state => createVehicleStopPlan(state, station, nextLegMiles, energyCalculations));
     const allCompatible = vehiclePlans.every(plan => plan.connectorCompatible);
     const allFeasible = vehiclePlans.every(plan => plan.feasible);
     if (!allCompatible || !allFeasible) routeBlocked = true;
@@ -56,11 +58,11 @@ export function calculateGroupPlan(trip: GroupTrip): GroupChargingPlan {
   });
 
   const totalChargingMinutes = stops.reduce((sum, stop) => sum + stop.groupStopMinutes, 0);
-  const estimatedDrivingMinutes = Math.round((trip.totalDistanceMiles / PLANNER_CONFIG.routeSpeedMph) * 60);
+  const estimatedDrivingMinutes = route.estimatedDrivingMinutes;
   const groupStatus = routeBlocked ? "Route blocked" : warnings.length > 0 ? "Review needed" : "Ready";
   const constrainedVehicleName = initialConstraint.state.vehicle.nickname;
   const summary = routeBlocked
-    ? "The mock station set cannot produce a compatible route where every EV can complete each leg with the planning reserve."
+    ? "The supplied station set cannot produce a compatible route where every EV can complete each leg with the planning reserve."
     : `${constrainedVehicleName} has the shortest starting buffer and influences the first shared stop. Each EV then charges only for its own next-leg requirement.`;
 
   return {
@@ -84,25 +86,25 @@ export function isStationCompatibleWithGroup(station: ChargingStation, vehicles:
   return vehicles.every(vehicle => effectiveVehicleSpecs(vehicle).connectors.some(connector => station.connectors.includes(connector)));
 }
 
-function selectSharedStations(trip: GroupTrip, stations: ChargingStation[], states: VehicleState[]): RouteSelection {
+function selectSharedStations(trip: GroupTrip, totalDistanceMiles: number, stations: ChargingStation[], states: VehicleState[], energyCalculations: EnergyCalculationProvider): RouteSelection {
   const compatibleStations = stations.filter(station => isStationCompatibleWithGroup(station, trip.vehicles));
   const nearestCompatible = compatibleStations[0];
-  const destinationReachableNow = canEveryVehicleTravel(states, trip.totalDistanceMiles);
-  const stationReachableNow = nearestCompatible ? canEveryVehicleTravel(states, nearestCompatible.distanceMiles) : false;
-  const originChargeRequired = !destinationReachableNow && (!stationReachableNow || states.some(state => state.batteryPercent <= PLANNER_CONFIG.reservePercent + 5));
-  const maximumLegMiles = maxFeasibleGroupLeg(trip.vehicles);
+  const destinationReachableNow = canEveryVehicleTravel(states, totalDistanceMiles, energyCalculations);
+  const stationReachableNow = nearestCompatible ? canEveryVehicleTravel(states, nearestCompatible.distanceMiles, energyCalculations) : false;
+  const originChargeRequired = !destinationReachableNow && (!stationReachableNow || states.some(state => state.batteryPercent <= energyCalculations.assumptions.reservePercent + 5));
+  const maximumLegMiles = maxFeasibleGroupLeg(trip.vehicles, energyCalculations);
   const selected: ChargingStation[] = [];
   let currentDistance = 0;
-  let currentLimit = originChargeRequired ? maximumLegMiles : currentSafeGroupMiles(states);
+  let currentLimit = originChargeRequired ? maximumLegMiles : currentSafeGroupMiles(states, energyCalculations);
 
-  while (trip.totalDistanceMiles - currentDistance > currentLimit && selected.length < PLANNER_CONFIG.maxStops) {
+  while (totalDistanceMiles - currentDistance > currentLimit && selected.length < PLANNER_CONFIG.maxStops) {
     const candidates = compatibleStations
       .filter(station => station.distanceMiles > currentDistance + PLANNER_CONFIG.minimumStationGapMiles && station.distanceMiles - currentDistance <= currentLimit)
-      .filter(station => hasFeasibleForwardPoint(station.distanceMiles, trip.totalDistanceMiles, compatibleStations, maximumLegMiles))
+      .filter(station => hasFeasibleForwardPoint(station.distanceMiles, totalDistanceMiles, compatibleStations, maximumLegMiles))
       .sort((a, b) => b.distanceMiles - a.distanceMiles);
     const station = candidates[0];
     if (!station) {
-      const constraint = findConstraint(states);
+      const constraint = findConstraint(states, energyCalculations);
       return {
         stations: selected,
         originChargeRequired,
@@ -110,7 +112,7 @@ function selectSharedStations(trip: GroupTrip, stations: ChargingStation[], stat
           stationName: "No feasible shared next leg",
           distanceMiles: Math.round(currentDistance + currentLimit),
           missingConnectors: [],
-          message: `${constraint.state.vehicle.nickname} cannot reach a compatible next point while preserving the ${PLANNER_CONFIG.reservePercent}% reserve and ${PLANNER_CONFIG.planningBufferPercent}% planning buffer. The planner did not cap the required charge at 100%.`,
+          message: `${constraint.state.vehicle.nickname} cannot reach a compatible next point while preserving the ${energyCalculations.assumptions.reservePercent}% reserve and ${energyCalculations.assumptions.planningBufferPercent}% planning buffer. The planner did not cap the required charge at 100%.`,
         },
       };
     }
@@ -119,7 +121,7 @@ function selectSharedStations(trip: GroupTrip, stations: ChargingStation[], stat
     currentLimit = maximumLegMiles;
   }
 
-  if (trip.totalDistanceMiles - currentDistance > currentLimit) {
+  if (totalDistanceMiles - currentDistance > currentLimit) {
     return {
       stations: selected,
       originChargeRequired,
@@ -134,17 +136,20 @@ function selectSharedStations(trip: GroupTrip, stations: ChargingStation[], stat
   return { stations: selected, originChargeRequired };
 }
 
-function createVehicleStopPlan(state: VehicleState, station: ChargingStation, nextLegMiles: number): VehicleStopPlan {
+function createVehicleStopPlan(state: VehicleState, station: ChargingStation, nextLegMiles: number, energyCalculations: EnergyCalculationProvider): VehicleStopPlan {
   const specs = effectiveVehicleSpecs(state.vehicle);
   const connectorCompatible = specs.connectors.some(connector => station.connectors.includes(connector));
   const arrivalBatteryPercent = clamp(state.batteryPercent, 0, 100);
-  const requiredDeparture = recommendedDepartureSoc(nextLegMiles, specs.estimatedRangeMiles);
+  const requiredDeparture = energyCalculations.recommendedDepartureSoc(state.vehicle, nextLegMiles);
   const feasible = requiredDeparture <= 100;
   const chargeNeeded = connectorCompatible && feasible && arrivalBatteryPercent < requiredDeparture;
-  const chargePercent = chargeNeeded ? requiredDeparture - arrivalBatteryPercent : 0;
-  const energyNeededKwh = specs.batteryCapacityKwh * (chargePercent / 100);
-  const effectivePower = connectorCompatible ? Math.min(specs.maxChargingSpeedKw, station.maxPowerKw, connectorPowerCap(specs.connectors, station.connectors)) * PLANNER_CONFIG.chargingTaperFactor : 0;
-  const estimatedChargingMinutes = chargeNeeded && effectivePower > 0 ? Math.ceil((energyNeededKwh / effectivePower) * 60) : 0;
+  const estimatedChargingMinutes = chargeNeeded ? energyCalculations.estimateChargingMinutes({
+    vehicle: state.vehicle,
+    station,
+    arrivalBatteryPercent,
+    departureBatteryPercent: requiredDeparture,
+    connectorCompatible,
+  }) : 0;
   return {
     vehicleId: state.vehicle.id,
     nickname: state.vehicle.nickname,
@@ -174,8 +179,8 @@ function buildStopReason(plans: VehicleStopPlan[], longest: VehicleStopPlan) {
   return `${noChargeMessage}${longest.nickname} requires the longest charging session and sets the group stop duration at ${longest.estimatedChargingMinutes} minutes.`;
 }
 
-function originStation(trip: GroupTrip): ChargingStation {
-  return { id: "origin-precharge", name: "Pre-departure charging required", locationLabel: trip.startingLocation, distanceMiles: 0, maxPowerKw: 250, connectors: ["NACS", "CCS", "CHAdeMO", "J1772"], stalls: trip.vehicles.length, isDemoData: true };
+function originStation(trip: GroupTrip, isDemoData: boolean): ChargingStation {
+  return { id: "origin-precharge", name: "Pre-departure charging required", locationLabel: trip.startingLocation, distanceMiles: 0, maxPowerKw: 250, connectors: ["NACS", "CCS", "CHAdeMO", "J1772"], stalls: trip.vehicles.length, isDemoData };
 }
 
 function buildCompatibilityWarnings(stations: ChargingStation[], vehicles: EVVehicle[]): CompatibilityWarning[] {
@@ -190,25 +195,20 @@ function buildCompatibilityWarnings(stations: ChargingStation[], vehicles: EVVeh
   });
 }
 
-function findConstraint(states: VehicleState[]) {
-  return states.map(state => ({ state, safeMiles: safeMilesAtSoc(state.vehicle, state.batteryPercent) })).sort((a, b) => a.safeMiles - b.safeMiles)[0];
+function findConstraint(states: VehicleState[], energyCalculations: EnergyCalculationProvider) {
+  return states.map(state => ({ state, safeMiles: energyCalculations.usableMilesAtStateOfCharge(state.vehicle, state.batteryPercent) })).sort((a, b) => a.safeMiles - b.safeMiles)[0];
 }
 
-function currentSafeGroupMiles(states: VehicleState[]) {
-  return Math.min(...states.map(state => safeMilesAtSoc(state.vehicle, state.batteryPercent)));
+function currentSafeGroupMiles(states: VehicleState[], energyCalculations: EnergyCalculationProvider) {
+  return Math.min(...states.map(state => energyCalculations.usableMilesAtStateOfCharge(state.vehicle, state.batteryPercent)));
 }
 
-function safeMilesAtSoc(vehicle: EVVehicle, soc: number) {
-  const range = effectiveVehicleSpecs(vehicle).estimatedRangeMiles;
-  return range * Math.max(0, soc - PLANNER_CONFIG.reservePercent - PLANNER_CONFIG.planningBufferPercent) / 100;
+function maxFeasibleGroupLeg(vehicles: EVVehicle[], energyCalculations: EnergyCalculationProvider) {
+  return Math.min(...vehicles.map(vehicle => energyCalculations.maximumUsableMiles(vehicle)));
 }
 
-function maxFeasibleGroupLeg(vehicles: EVVehicle[]) {
-  return Math.min(...vehicles.map(vehicle => effectiveVehicleSpecs(vehicle).estimatedRangeMiles * (100 - PLANNER_CONFIG.reservePercent - PLANNER_CONFIG.planningBufferPercent) / 100));
-}
-
-function canEveryVehicleTravel(states: VehicleState[], miles: number) {
-  return states.every(state => safeMilesAtSoc(state.vehicle, state.batteryPercent) >= miles);
+function canEveryVehicleTravel(states: VehicleState[], miles: number, energyCalculations: EnergyCalculationProvider) {
+  return states.every(state => energyCalculations.usableMilesAtStateOfCharge(state.vehicle, state.batteryPercent) >= miles);
 }
 
 function hasFeasibleForwardPoint(currentDistance: number, totalDistance: number, stations: ChargingStation[], maximumLegMiles: number) {
@@ -218,15 +218,6 @@ function hasFeasibleForwardPoint(currentDistance: number, totalDistance: number,
 
 function longestCharge(plans: VehicleStopPlan[]) {
   return [...plans].sort((a, b) => b.estimatedChargingMinutes - a.estimatedChargingMinutes)[0];
-}
-
-function connectorPowerCap(vehicleConnectors: ConnectorType[], stationConnectors: ConnectorType[]) {
-  const shared = vehicleConnectors.filter(connector => stationConnectors.includes(connector));
-  return Math.max(...shared.map(connector => connector === "J1772" ? 19 : connector === "CHAdeMO" ? 100 : 400), 0);
-}
-
-function milesToPercent(miles: number, vehicle: EVVehicle) {
-  return (miles / Math.max(1, effectiveVehicleSpecs(vehicle).estimatedRangeMiles)) * 100;
 }
 
 function formatNames(names: string[]) {

@@ -10,7 +10,7 @@ export interface EVCatalogEntry {
   maxChargingSpeedKw: number;
   batteryCapacityKwh: number;
   connectors: ConnectorType[];
-  isPrototypeData: true;
+  isPrototypeData: boolean;
 }
 
 export interface EVPlanningOverrides {
@@ -54,7 +54,7 @@ export interface ChargingStation {
   maxPowerKw: number;
   connectors: ConnectorType[];
   stalls: number;
-  isDemoData: true;
+  isDemoData: boolean;
 }
 
 export interface VehicleStopPlan {
