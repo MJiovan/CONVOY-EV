@@ -24,11 +24,16 @@ export class OpenRouteServiceRouteProvider implements RoutePlanningProvider {
   ) {}
 
   async planRoute(request: RoutePlanningRequest): Promise<PlannedRoute> {
-    const response = await this.fetcher(this.endpoint, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ originLabel: request.originLabel, destinationLabel: request.destinationLabel }),
-    });
+    let response: Response;
+    try {
+      response = await this.fetcher(this.endpoint, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ originLabel: request.originLabel, destinationLabel: request.destinationLabel }),
+      });
+    } catch {
+      throw new RoutePlanningError("The network connection was lost during route calculation. You can continue with the demo route.", "ROUTING_OFFLINE");
+    }
     const payload = await readJson(response);
     if (!response.ok) {
       const message = typeof payload.message === "string" ? payload.message : "Real-world routing is unavailable right now.";

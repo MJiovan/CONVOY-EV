@@ -10,13 +10,19 @@ export interface EffectiveVehicleSpecs {
 
 export function effectiveVehicleSpecs(vehicle: EVVehicle): EffectiveVehicleSpecs {
   const overrides = vehicle.planningOverrides;
+  const estimatedRangeMiles = positiveNumber(overrides?.estimatedRangeMiles ?? vehicle.estimatedRangeMiles, 1);
+  const maxChargingSpeedKw = positiveNumber(overrides?.maxChargingSpeedKw ?? vehicle.maxChargingSpeedKw, 1);
   return {
-    estimatedRangeMiles: overrides?.estimatedRangeMiles ?? vehicle.estimatedRangeMiles,
-    maxChargingSpeedKw: overrides?.maxChargingSpeedKw ?? vehicle.maxChargingSpeedKw,
-    batteryCapacityKwh: vehicle.batteryCapacityKwh ?? clamp(vehicle.estimatedRangeMiles / 3.2, 45, 125),
+    estimatedRangeMiles,
+    maxChargingSpeedKw,
+    batteryCapacityKwh: positiveNumber(vehicle.batteryCapacityKwh, clamp(estimatedRangeMiles / 3.2, 45, 125)),
     connectors: overrides?.connectors ?? vehicle.connectors,
     isOverridden: Boolean(overrides && (overrides.estimatedRangeMiles !== undefined || overrides.maxChargingSpeedKw !== undefined || overrides.connectors !== undefined)),
   };
+}
+
+function positiveNumber(value: number | undefined, fallback: number) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
 export function vehicleFromCatalog(entry: EVCatalogEntry, existing: Pick<EVVehicle, "id" | "nickname" | "startingBatteryPercent">): EVVehicle {

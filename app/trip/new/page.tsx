@@ -1,13 +1,13 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useMemo, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ArrowRight, BatteryCharging, Cable, CarFront, ChevronDown, LoaderCircle, MapPin, Plus, RotateCcw, Route, Search, Trash2, UsersRound } from "lucide-react";
 import { DemoDataBadge } from "@/components/DemoDataBadge";
 import { connectorTypes, createSampleTrip } from "@/data/demo-route";
 import { demoVehicleSpecificationProvider } from "@/providers/demo/vehicle-provider";
-import { saveTrip } from "@/lib/trip-storage";
+import { clearTripDraft, loadTripDraft, saveTrip, saveTripDraft } from "@/lib/trip-storage";
 import { effectiveVehicleSpecs, vehicleDisplayName, vehicleFromCatalog } from "@/lib/vehicle-specs";
 import { getProviderSet } from "@/providers";
 import { RoutePlanningError } from "@/providers/live/openrouteservice-provider";
@@ -22,6 +22,18 @@ export default function NewTripPage() {
   const [notice, setNotice] = useState("");
   const [routing, setRouting] = useState(false);
   const [demoFallbackAvailable, setDemoFallbackAvailable] = useState(false);
+  const [draftReady, setDraftReady] = useState(false);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const savedDraft = loadTripDraft();
+      if (savedDraft) setTrip(savedDraft);
+      setDraftReady(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+  useEffect(() => {
+    if (draftReady) saveTripDraft(trip);
+  }, [draftReady, trip]);
   const updateTrip = (key: "name" | "startingLocation" | "destination", value: string) => {
     setTrip(current => ({ ...current, [key]: value, ...(key === "startingLocation" || key === "destination" ? { route: undefined } : {}) }));
     if (key === "startingLocation" || key === "destination") {
@@ -46,6 +58,7 @@ export default function NewTripPage() {
       route,
       totalDistanceMiles: route?.totalDistanceMiles ?? Math.max(25, trip.totalDistanceMiles),
     });
+    clearTripDraft();
     router.push("/trip");
   };
   const submit = async (event: FormEvent) => {

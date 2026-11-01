@@ -5,6 +5,7 @@ import { demoVehicleSpecificationProvider } from "@/providers/demo/vehicle-provi
 import { vehicleFromCatalog } from "@/lib/vehicle-specs";
 
 const TRIP_KEY = "convoy-ev-active-trip-v1";
+const TRIP_DRAFT_KEY = "convoy-ev-trip-draft-v1";
 export const TRIP_CHANGED_EVENT = "convoy-ev:trip-changed";
 
 export function loadTrip(): GroupTrip | null {
@@ -40,6 +41,22 @@ export function saveTrip(trip: GroupTrip) {
   window.dispatchEvent(new Event(TRIP_CHANGED_EVENT));
 }
 
+export function loadTripDraft(): GroupTrip | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(TRIP_DRAFT_KEY) || "null");
+    return isTripDraft(parsed) ? parsed : null;
+  } catch { return null; }
+}
+
+export function saveTripDraft(trip: GroupTrip) {
+  sessionStorage.setItem(TRIP_DRAFT_KEY, JSON.stringify(trip));
+}
+
+export function clearTripDraft() {
+  sessionStorage.removeItem(TRIP_DRAFT_KEY);
+}
+
 export function clearTrip() {
   localStorage.removeItem(TRIP_KEY);
   window.dispatchEvent(new Event(TRIP_CHANGED_EVENT));
@@ -64,6 +81,21 @@ function isTrip(value: unknown): value is GroupTrip {
       && typeof vehicle.maxChargingSpeedKw === "number"
       && Array.isArray(vehicle.connectors)
       && vehicle.connectors.length > 0);
+}
+
+function isTripDraft(value: unknown): value is GroupTrip {
+  if (!value || typeof value !== "object") return false;
+  const trip = value as Partial<GroupTrip>;
+  return typeof trip.id === "string"
+    && typeof trip.name === "string"
+    && typeof trip.startingLocation === "string"
+    && typeof trip.destination === "string"
+    && typeof trip.totalDistanceMiles === "number"
+    && Array.isArray(trip.vehicles)
+    && trip.vehicles.length >= 2
+    && trip.vehicles.every(vehicle => typeof vehicle?.id === "string"
+      && typeof vehicle.nickname === "string"
+      && typeof vehicle.startingBatteryPercent === "number");
 }
 
 function isStoredRoute(value: unknown) {

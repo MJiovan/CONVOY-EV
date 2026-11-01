@@ -14,7 +14,9 @@ export function validateRouteRequest(value: { originLabel?: unknown; destination
   if (originLabel.length > 200 || destinationLabel.length > 200) {
     throw new RouteValidationError("Locations must be 200 characters or fewer.", "LOCATION_TOO_LONG");
   }
-  if (normalizeLocation(originLabel) === normalizeLocation(destinationLabel)) {
+  const normalizedOrigin = normalizeLocation(originLabel);
+  const normalizedDestination = normalizeLocation(destinationLabel);
+  if (normalizedOrigin && normalizedDestination && normalizedOrigin === normalizedDestination) {
     throw new RouteValidationError("Starting location and destination must be different.", "SAME_LOCATION");
   }
   return { originLabel, destinationLabel };
