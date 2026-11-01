@@ -1,9 +1,10 @@
 import { env } from "cloudflare:workers";
 import { OpenRouteServiceApiError, planOpenRouteServiceRoute } from "@/lib/openrouteservice";
+import { RouteValidationError, validateRouteRequest } from "@/lib/route-validation";
 
 export async function POST(request: Request) {
   const body = await readBody(request);
-  if (!body) return Response.json({ code: "INVALID_REQUEST", message: "Enter both a starting location and destination." }, { status: 400 });
+  if (body instanceof RouteValidationError) return Response.json({ code: body.code, message: body.message }, { status: 400 });
 
   const apiKey = env.OPENROUTESERVICE_API_KEY || process.env.OPENROUTESERVICE_API_KEY;
   if (!apiKey) {
@@ -27,9 +28,8 @@ export async function POST(request: Request) {
 async function readBody(request: Request) {
   try {
     const value = await request.json() as { originLabel?: unknown; destinationLabel?: unknown };
-    const originLabel = typeof value.originLabel === "string" ? value.originLabel.trim() : "";
-    const destinationLabel = typeof value.destinationLabel === "string" ? value.destinationLabel.trim() : "";
-    if (!originLabel || !destinationLabel || originLabel.length > 200 || destinationLabel.length > 200) return null;
-    return { originLabel, destinationLabel };
-  } catch { return null; }
+    return validateRouteRequest(value);
+  } catch (error) {
+    return error instanceof RouteValidationError ? error : new RouteValidationError("Enter both a starting location and destination.", "INVALID_REQUEST");
+  }
 }

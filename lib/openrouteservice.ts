@@ -4,6 +4,7 @@ import type { RoutePlanningRequest } from "@/providers/contracts";
 const GEOCODE_URL = "https://api.openrouteservice.org/geocode/search";
 const DIRECTIONS_URL = "https://api.openrouteservice.org/v2/directions/driving-car/geojson";
 const METERS_PER_MILE = 1609.344;
+export const MAX_SUPPORTED_ROUTE_MILES = 3700;
 
 export class OpenRouteServiceApiError extends Error {
   constructor(message: string, readonly code: string, readonly status = 502) {
@@ -24,6 +25,9 @@ export async function planOpenRouteServiceRoute(
     headers: { Authorization: apiKey, "content-type": "application/json" },
     body: JSON.stringify({ coordinates: [origin.coordinates, destination.coordinates] }),
   });
+  if (response.status === 401 || response.status === 403) {
+    throw routingAuthError();
+  }
   if (!response.ok) throw new OpenRouteServiceApiError("The routing service could not calculate a driving route between those locations.", "DIRECTIONS_FAILED", response.status);
   const payload = await response.json() as OrsDirectionsResponse;
   const feature = payload.features?.[0];
@@ -35,6 +39,9 @@ export async function planOpenRouteServiceRoute(
   }
 
   const totalDistanceMiles = roundOne(distanceMeters! / METERS_PER_MILE);
+  if (totalDistanceMiles > MAX_SUPPORTED_ROUTE_MILES) {
+    throw new OpenRouteServiceApiError(`This trip is longer than the supported ${MAX_SUPPORTED_ROUTE_MILES.toLocaleString()}-mile routing limit. Try planning it in smaller sections.`, "ROUTE_TOO_LONG", 422);
+  }
   const estimatedDrivingMinutes = Math.max(1, Math.round(durationSeconds! / 60));
   const source: ProviderSource = {
     mode: "live",
@@ -66,6 +73,9 @@ async function geocode(query: string, apiKey: string, fetcher: typeof fetch, fie
   url.searchParams.set("text", query);
   url.searchParams.set("size", "1");
   const response = await fetcher(url);
+  if (response.status === 401 || response.status === 403) {
+    throw routingAuthError();
+  }
   if (!response.ok) throw new OpenRouteServiceApiError(`The routing service could not look up the ${field}.`, "GEOCODING_FAILED", response.status);
   const payload = await response.json() as OrsGeocodeResponse;
   const feature = payload.features?.[0];
@@ -74,6 +84,10 @@ async function geocode(query: string, apiKey: string, fetcher: typeof fetch, fie
     throw new OpenRouteServiceApiError(`We could not find the ${field}. Try adding a city, state, or ZIP code.`, "LOCATION_NOT_FOUND", 422);
   }
   return { coordinates: coordinates as RouteCoordinate, label: feature?.properties?.label || query };
+}
+
+function routingAuthError() {
+  return new OpenRouteServiceApiError("The routing service rejected its API key. You can continue with the demo route while the key is corrected.", "ROUTING_AUTH_FAILED", 503);
 }
 
 const roundOne = (value: number) => Math.round(value * 10) / 10;

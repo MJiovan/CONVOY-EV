@@ -11,6 +11,7 @@ import { saveTrip } from "@/lib/trip-storage";
 import { effectiveVehicleSpecs, vehicleDisplayName, vehicleFromCatalog } from "@/lib/vehicle-specs";
 import { getProviderSet } from "@/providers";
 import { RoutePlanningError } from "@/providers/live/openrouteservice-provider";
+import { RouteValidationError, validateRouteRequest } from "@/lib/route-validation";
 import type { ConnectorType, EVCatalogEntry, EVVehicle, GroupTrip, PlannedRoute } from "@/types";
 
 const vehicleSpecifications = demoVehicleSpecificationProvider;
@@ -51,6 +52,12 @@ export default function NewTripPage() {
     event.preventDefault();
     if (trip.vehicles.some(vehicle => !vehicle.catalogVehicleId)) return setNotice("Select a catalog vehicle for every driver.");
     if (trip.vehicles.some(vehicle => effectiveVehicleSpecs(vehicle).connectors.length === 0)) return setNotice("Choose at least one connector for every EV.");
+    try {
+      validateRouteRequest({ originLabel: trip.startingLocation, destinationLabel: trip.destination });
+    } catch (error) {
+      if (error instanceof RouteValidationError) return setNotice(error.message);
+      return setNotice("Check the starting location and destination.");
+    }
     setNotice("");
     setDemoFallbackAvailable(false);
     setRouting(true);
@@ -186,5 +193,13 @@ function CatalogSelect({ id, label, value, placeholder, options, disabled = fals
 function blankVehicle(position: number): EVVehicle { return { id: `ev-${Date.now()}-${position}`, nickname: `Driver ${position}`, manufacturer: "", model: "", estimatedRangeMiles: 240, startingBatteryPercent: 75, maxChargingSpeedKw: 150, connectors: [] }; }
 function SectionHeading({ icon, step, title, copy }: { icon: React.ReactNode; step: string; title: string; copy: string }) { return <div className="flex items-start gap-4"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#e6f7fd] text-[#137da3] [&>svg]:h-5 [&>svg]:w-5">{icon}</span><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#1683a8]">Step {step}</p><h2 className="mt-1 text-xl font-extrabold text-[#10212b]">{title}</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">{copy}</p></div></div>; }
 function TextField({ label, ariaLabel, value, onChange }: { label: string; ariaLabel: string; value: string; onChange: (value: string) => void }) { return <label><span className="field-label">{label}</span><input aria-label={ariaLabel} className="field-input mt-2" value={value} onChange={event => onChange(event.target.value)} required/></label>; }
-function NumberField({ label, ariaLabel, value, suffix, min, max, onChange }: { label: string; ariaLabel: string; value: number; suffix: string; min: number; max?: number; onChange: (value: number) => void }) { return <label><span className="field-label">{label}</span><span className="relative mt-2 block"><input aria-label={ariaLabel} className="field-input pr-16" type="number" min={min} max={max} value={value} onChange={event => onChange(Math.max(min, Math.min(max ?? Number.MAX_SAFE_INTEGER, Number(event.target.value))))}/><span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{suffix}</span></span></label>; }
+function NumberField({ label, ariaLabel, value, suffix, min, max, onChange }: { label: string; ariaLabel: string; value: number; suffix: string; min: number; max?: number; onChange: (value: number) => void }) {
+  const commitValue = (input: HTMLInputElement) => {
+    const parsed = Number(input.value);
+    const safeValue = Number.isFinite(parsed) ? Math.max(min, Math.min(max ?? Number.MAX_SAFE_INTEGER, parsed)) : min;
+    input.value = String(safeValue);
+    onChange(safeValue);
+  };
+  return <label><span className="field-label">{label}</span><span className="relative mt-2 block"><input aria-label={ariaLabel} className="field-input pr-16" type="number" min={min} max={max} value={value} onInput={event => commitValue(event.currentTarget)} onBlur={event => commitValue(event.currentTarget)}/><span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">{suffix}</span></span></label>;
+}
 function Spec({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) { return <div className="rounded-xl bg-[#f4f7f8] p-3"><span className="text-[#1683a8] [&>svg]:h-4 [&>svg]:w-4">{icon}</span><p className="mt-2 text-[9px] font-bold uppercase tracking-wider text-slate-400">{label}</p><p className="mt-1 text-sm font-extrabold text-[#10212b]">{value}</p></div>; }
