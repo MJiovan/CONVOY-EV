@@ -7,8 +7,14 @@ import { createDemoPlanningInputs } from "../providers";
 
 assert.throws(
   () => validateRouteRequest({ originLabel: "", destinationLabel: "San Diego, CA" }),
-  error => error instanceof RouteValidationError && error.code === "MISSING_LOCATION",
+  error => error instanceof RouteValidationError && error.code === "MISSING_ORIGIN" && error.message.includes("starting location"),
   "missing starting location should be rejected",
+);
+
+assert.throws(
+  () => validateRouteRequest({ originLabel: "Phoenix, AZ", destinationLabel: "" }),
+  error => error instanceof RouteValidationError && error.code === "MISSING_DESTINATION" && error.message.includes("destination"),
+  "missing destination should be rejected with a specific message",
 );
 
 assert.throws(

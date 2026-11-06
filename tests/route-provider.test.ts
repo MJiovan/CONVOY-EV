@@ -4,6 +4,7 @@ import { calculateGroupPlan } from "../lib/group-planner";
 import { OpenRouteServiceApiError, planOpenRouteServiceRoute } from "../lib/openrouteservice";
 import { createPlanningInputs, demoProviderSet, getProviderSet } from "../providers";
 import { OpenRouteServiceRouteProvider, openRouteServiceSource, RoutePlanningError } from "../providers/live/openrouteservice-provider";
+import { getRouteErrorPresentation } from "../lib/route-error-presentation";
 import type { PlannedRoute } from "../types";
 
 const requests: Array<{ url: string; init?: RequestInit }> = [];
@@ -62,5 +63,12 @@ const plan = calculateGroupPlan({ ...sample, totalDistanceMiles: injectedRoute.t
 assert.equal(plan.estimatedDrivingMinutes, 350, "group planner should use live route duration");
 assert.equal(inputs.route.totalDistanceMiles, 360, "live road distance should reach planning inputs");
 assert.equal(getProviderSet("live").routePlanning.source.providerId, "openrouteservice", "live registry should select openrouteservice");
+
+const offlineGuidance = getRouteErrorPresentation("ROUTING_OFFLINE", "The connection was lost.");
+assert.equal(offlineGuidance.title, "We could not reach the routing service", "offline errors should have a clear heading");
+assert.ok(offlineGuidance.nextStep.includes("demo route"), "recoverable route errors should explain the demo fallback");
+
+const locationGuidance = getRouteErrorPresentation("LOCATION_NOT_FOUND", "The destination was not found.");
+assert.ok(locationGuidance.nextStep.includes("ZIP/postal code"), "location errors should tell the user how to make the search more specific");
 
 console.log("Verified openrouteservice geocoding, directions, geometry, client errors, registry selection, and planner injection.");

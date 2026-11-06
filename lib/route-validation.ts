@@ -8,8 +8,14 @@ export class RouteValidationError extends Error {
 export function validateRouteRequest(value: { originLabel?: unknown; destinationLabel?: unknown }) {
   const originLabel = typeof value.originLabel === "string" ? value.originLabel.trim() : "";
   const destinationLabel = typeof value.destinationLabel === "string" ? value.destinationLabel.trim() : "";
-  if (!originLabel || !destinationLabel) {
+  if (!originLabel && !destinationLabel) {
     throw new RouteValidationError("Enter both a starting location and destination.", "MISSING_LOCATION");
+  }
+  if (!originLabel) {
+    throw new RouteValidationError("Enter a starting location before creating the trip.", "MISSING_ORIGIN");
+  }
+  if (!destinationLabel) {
+    throw new RouteValidationError("Enter a destination before creating the trip.", "MISSING_DESTINATION");
   }
   if (originLabel.length > 200 || destinationLabel.length > 200) {
     throw new RouteValidationError("Locations must be 200 characters or fewer.", "LOCATION_TOO_LONG");

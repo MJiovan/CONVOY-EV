@@ -12,14 +12,21 @@ import { effectiveVehicleSpecs, vehicleDisplayName, vehicleFromCatalog } from "@
 import { getProviderSet } from "@/providers";
 import { RoutePlanningError } from "@/providers/live/openrouteservice-provider";
 import { RouteValidationError, validateRouteRequest } from "@/lib/route-validation";
+import { getRouteErrorPresentation } from "@/lib/route-error-presentation";
 import type { ConnectorType, EVCatalogEntry, EVVehicle, GroupTrip, PlannedRoute } from "@/types";
+
+interface FormNotice {
+  title: string;
+  message: string;
+  nextStep?: string;
+}
 
 const vehicleSpecifications = demoVehicleSpecificationProvider;
 
 export default function NewTripPage() {
   const router = useRouter();
   const [trip, setTrip] = useState<GroupTrip>(() => createSampleTrip());
-  const [notice, setNotice] = useState("");
+  const [notice, setNotice] = useState<FormNotice | null>(null);
   const [routing, setRouting] = useState(false);
   const [demoFallbackAvailable, setDemoFallbackAvailable] = useState(false);
   const [draftReady, setDraftReady] = useState(false);
@@ -37,15 +44,15 @@ export default function NewTripPage() {
   const updateTrip = (key: "name" | "startingLocation" | "destination", value: string) => {
     setTrip(current => ({ ...current, [key]: value, ...(key === "startingLocation" || key === "destination" ? { route: undefined } : {}) }));
     if (key === "startingLocation" || key === "destination") {
-      setNotice("");
+      setNotice(null);
       setDemoFallbackAvailable(false);
     }
   };
   const replaceVehicle = (next: EVVehicle) => setTrip(current => ({ ...current, vehicles: current.vehicles.map(vehicle => vehicle.id === next.id ? next : vehicle) }));
   const addVehicle = () => setTrip(current => ({ ...current, vehicles: [...current.vehicles, blankVehicle(current.vehicles.length + 1)] }));
   const removeVehicle = (id: string) => {
-    if (trip.vehicles.length <= 2) return setNotice("A group trip needs at least two EVs.");
-    setNotice("");
+    if (trip.vehicles.length <= 2) return setNotice({ title: "At least two EVs are required", message: "A group trip needs at least two vehicles. Add another EV before removing this one." });
+    setNotice(null);
     setTrip(current => ({ ...current, vehicles: current.vehicles.filter(vehicle => vehicle.id !== id) }));
   };
   const savePreparedTrip = (route?: PlannedRoute) => {
@@ -63,23 +70,26 @@ export default function NewTripPage() {
   };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (trip.vehicles.some(vehicle => !vehicle.catalogVehicleId)) return setNotice("Select a catalog vehicle for every driver.");
-    if (trip.vehicles.some(vehicle => effectiveVehicleSpecs(vehicle).connectors.length === 0)) return setNotice("Choose at least one connector for every EV.");
+    if (!trip.name.trim()) return setNotice({ title: "Add a trip name", message: "Enter a short name so you can recognize this group trip later." });
+    if (trip.vehicles.some(vehicle => !vehicle.catalogVehicleId)) return setNotice({ title: "A vehicle selection is missing", message: "Select a year, make, model, and trim for every driver before creating the plan." });
+    if (trip.vehicles.some(vehicle => effectiveVehicleSpecs(vehicle).connectors.length === 0)) return setNotice({ title: "Connector information is missing", message: "Choose at least one charging connector for every EV before creating the plan." });
     try {
       validateRouteRequest({ originLabel: trip.startingLocation, destinationLabel: trip.destination });
     } catch (error) {
-      if (error instanceof RouteValidationError) return setNotice(error.message);
-      return setNotice("Check the starting location and destination.");
+      if (error instanceof RouteValidationError) return setNotice({ title: "Check the trip locations", message: error.message });
+      return setNotice({ title: "Check the trip locations", message: "Enter a valid starting location and destination, then try again." });
     }
-    setNotice("");
+    setNotice(null);
     setDemoFallbackAvailable(false);
     setRouting(true);
     try {
       const route = await getProviderSet("live").routePlanning.planRoute({ originLabel: trip.startingLocation, destinationLabel: trip.destination });
       savePreparedTrip(route);
     } catch (error) {
+      const code = error instanceof RoutePlanningError ? error.code : "ROUTING_FAILED";
       const message = error instanceof RoutePlanningError ? error.message : "Real-world routing is temporarily unavailable.";
-      setNotice(`${message} No trip was saved yet.`);
+      const presentation = getRouteErrorPresentation(code, message);
+      setNotice({ ...presentation, message: `${presentation.message} Your trip has not been saved yet.` });
       setDemoFallbackAvailable(true);
     } finally {
       setRouting(false);
@@ -99,7 +109,7 @@ export default function NewTripPage() {
         <div className="mt-7 space-y-5">{trip.vehicles.map((vehicle, index) => <VehicleEditor key={vehicle.id} vehicle={vehicle} index={index} canRemove={trip.vehicles.length > 2} onChange={replaceVehicle} onRemove={() => removeVehicle(vehicle.id)}/>)}</div>
       </section>
 
-      {notice && <div role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800"><p>{notice}</p>{demoFallbackAvailable && <button type="button" onClick={() => savePreparedTrip()} className="btn-dark mt-4">Continue with {trip.totalDistanceMiles}-mile Demo Route <ArrowRight size={16}/></button>}</div>}
+      {notice && <div role="alert" className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-950"><p className="text-sm font-extrabold">{notice.title}</p><p className="mt-1 text-sm leading-6 text-amber-900/80">{notice.message}</p>{notice.nextStep && <p className="mt-2 text-xs font-semibold leading-5 text-amber-800">What to do: {notice.nextStep}</p>}{demoFallbackAvailable && <div className="mt-4 flex flex-wrap items-center gap-3"><button type="button" onClick={() => savePreparedTrip()} className="btn-dark">Use {trip.totalDistanceMiles}-mile Demo Route <ArrowRight size={16}/></button><span className="text-xs font-semibold text-amber-800">This uses sample distance, drive time, and charging stations.</span></div>}</div>}
       <div className="mt-6 flex flex-col items-start justify-between gap-4 rounded-[24px] bg-[#0e2835] p-6 text-white sm:flex-row sm:items-center"><div><p className="text-sm font-bold">Ready to calculate one shared plan?</p><p className="mt-1 text-xs text-white/50">The route is calculated first, then the most constrained EV determines the shared charging plan.</p></div><button type="submit" disabled={routing} aria-busy={routing} className="btn-electric w-full justify-center disabled:cursor-wait disabled:opacity-70 sm:w-auto">{routing ? <LoaderCircle className="animate-spin" size={17}/> : <ArrowRight size={17}/>} {routing ? "Calculating road route…" : "Create group charging plan"}</button></div>
     </form>
   </main>;
@@ -205,7 +215,7 @@ function CatalogSelect({ id, label, value, placeholder, options, disabled = fals
 
 function blankVehicle(position: number): EVVehicle { return { id: `ev-${Date.now()}-${position}`, nickname: `Driver ${position}`, manufacturer: "", model: "", estimatedRangeMiles: 240, startingBatteryPercent: 75, maxChargingSpeedKw: 150, connectors: [] }; }
 function SectionHeading({ icon, step, title, copy }: { icon: React.ReactNode; step: string; title: string; copy: string }) { return <div className="flex items-start gap-4"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#e6f7fd] text-[#137da3] [&>svg]:h-5 [&>svg]:w-5">{icon}</span><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#1683a8]">Step {step}</p><h2 className="mt-1 text-xl font-extrabold text-[#10212b]">{title}</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">{copy}</p></div></div>; }
-function TextField({ label, ariaLabel, value, onChange }: { label: string; ariaLabel: string; value: string; onChange: (value: string) => void }) { return <label><span className="field-label">{label}</span><input aria-label={ariaLabel} className="field-input mt-2" value={value} onChange={event => onChange(event.target.value)} required/></label>; }
+function TextField({ label, ariaLabel, value, onChange }: { label: string; ariaLabel: string; value: string; onChange: (value: string) => void }) { return <label><span className="field-label">{label}</span><input aria-label={ariaLabel} className="field-input mt-2" value={value} onChange={event => onChange(event.target.value)}/></label>; }
 function NumberField({ label, ariaLabel, value, suffix, min, max, onChange }: { label: string; ariaLabel: string; value: number; suffix: string; min: number; max?: number; onChange: (value: number) => void }) {
   const commitValue = (input: HTMLInputElement) => {
     const parsed = Number(input.value);

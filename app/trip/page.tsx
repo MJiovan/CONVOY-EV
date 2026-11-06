@@ -72,6 +72,7 @@ export default function TripDashboardPage() {
     </div></section>
 
     <section className="container-shell py-8">
+      <RouteSourceNotice trip={trip}/>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><Metric icon={<Route/>} label="Total distance" value={`${trip.totalDistanceMiles} mi`}/><Metric icon={<BatteryCharging/>} label="Shared stops" value={String(plan.stops.length)}/><Metric icon={<Clock3/>} label="Group charging" value={formatDuration(plan.totalChargingMinutes)}/><Metric icon={<Gauge/>} label="Current constraint" value={plan.constrainedVehicleName}/></div>
 
       <div className="mt-7 grid gap-7 xl:grid-cols-[1fr_350px]"><div className="min-w-0 space-y-7">
@@ -98,10 +99,18 @@ export default function TripDashboardPage() {
         </section>
       </div>
 
-      <aside className="space-y-5 xl:sticky xl:top-24 xl:self-start"><section className="rounded-[24px] bg-[#0e2835] p-6 text-white"><Gauge className="text-[#b8ff5a]"/><p className="mt-5 text-[10px] font-bold uppercase tracking-wider text-[#68d5ff]">Current constraint</p><h2 className="mt-2 text-2xl font-extrabold">{plan.constrainedVehicleName}</h2><p className="mt-3 text-sm leading-6 text-white/60">{plan.summary}</p></section><CompatibilityPanel plan={plan}/><section className="rounded-[24px] border border-amber-200 bg-amber-50 p-5"><div className="flex gap-3"><AlertTriangle className="h-5 w-5 shrink-0 text-amber-700"/><div><h2 className="text-sm font-extrabold text-amber-950">Prototype planning only</h2><p className="mt-2 text-xs leading-5 text-amber-900/70">Stations, distances, availability, battery behavior, and charge curves are Demo Data. Verify a real trip with live routing and charging networks.</p></div></div></section></aside>
+      <aside className="space-y-5 xl:sticky xl:top-24 xl:self-start"><section className="rounded-[24px] bg-[#0e2835] p-6 text-white"><Gauge className="text-[#b8ff5a]"/><p className="mt-5 text-[10px] font-bold uppercase tracking-wider text-[#68d5ff]">Current constraint</p><h2 className="mt-2 text-2xl font-extrabold">{plan.constrainedVehicleName}</h2><p className="mt-3 text-sm leading-6 text-white/60">{plan.summary}</p></section><CompatibilityPanel plan={plan}/><section className="rounded-[24px] border border-amber-200 bg-amber-50 p-5"><div className="flex gap-3"><AlertTriangle className="h-5 w-5 shrink-0 text-amber-700"/><div><h2 className="text-sm font-extrabold text-amber-950">Prototype planning only</h2><p className="mt-2 text-xs leading-5 text-amber-900/70">Charging stations, availability, vehicle specifications, battery behavior, and charge curves are Demo Data. Verify the complete plan with live charging networks before driving.</p></div></div></section></aside>
       </div>
     </section>
   </main>;
+}
+
+function RouteSourceNotice({ trip }: { trip: GroupTrip }) {
+  const route = trip.route;
+  const isDemoRoute = !route || route.source.isDemoData;
+  return <section className={`mb-5 rounded-2xl border p-5 ${isDemoRoute ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}`} aria-label="Route data source">
+    <div className="flex items-start gap-3"><span className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl ${isDemoRoute ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"}`}><Route size={18}/></span><div><div className="flex flex-wrap items-center gap-2"><h2 className={`text-sm font-extrabold ${isDemoRoute ? "text-amber-950" : "text-emerald-950"}`}>{isDemoRoute ? "You are using a demo route" : "Real road route loaded"}</h2>{isDemoRoute ? <DemoDataBadge/> : <span className="rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[.14em] text-emerald-800">Live route</span>}</div><p className={`mt-1 text-xs leading-5 ${isDemoRoute ? "text-amber-900/75" : "text-emerald-900/75"}`}>{isDemoRoute ? "The displayed distance and drive time are sample values, not a live road calculation. Charging stations and vehicle planning data are also demonstrations." : `Distance, drive time, and route geometry came from ${route.source.label}. Charging stations and vehicle planning data still use clearly labeled demonstration values.`}</p></div></div>
+  </section>;
 }
 
 function TripTimeline({ trip, plan, selectedStop, onSelect }: { trip: GroupTrip; plan: GroupChargingPlan; selectedStop: string | null; onSelect: (key: string) => void }) {
