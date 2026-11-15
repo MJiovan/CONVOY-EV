@@ -267,4 +267,3 @@ Use the exact URL printed by `npm run dev`. If the port is occupied, start on an
 - Live application: [https://convoyev.com](https://convoyev.com)
 
 The public application works without a private routing key by offering a clearly labeled demo-route fallback. Vehicle specifications, charging stations, energy assumptions, and charging-time estimates remain Demo Data.
-
