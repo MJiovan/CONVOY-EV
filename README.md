@@ -262,3 +262,11 @@ npm run install:ci
 
 Use the exact URL printed by `npm run dev`. If the port is occupied, start on another port with `npm run dev -- --port 5174`.
 
+## Live application and technical walkthrough
+
+- Live application: [https://convoyev.com](https://convoyev.com)
+- Detailed walkthrough guide: [docs/TECHNICAL_WALKTHROUGH.md](docs/TECHNICAL_WALKTHROUGH.md)
+- 6–8 minute recording script: [docs/RECORDING_SCRIPT.md](docs/RECORDING_SCRIPT.md)
+
+The public application works without a private routing key by offering a clearly labeled demo-route fallback. Vehicle specifications, charging stations, energy assumptions, and charging-time estimates remain Demo Data.
+
