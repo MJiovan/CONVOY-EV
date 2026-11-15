@@ -200,7 +200,6 @@ providers/
   live/                         OpenRouteService client provider
 tests/                          Automated catalog, planner, routing, and failure tests
 types/index.ts                  Shared domain types
-docs/TECHNICAL_WALKTHROUGH.md   Suggested final-presentation script
 ```
 
 ## How the planner works
@@ -263,6 +262,3 @@ npm run install:ci
 
 Use the exact URL printed by `npm run dev`. If the port is occupied, start on another port with `npm run dev -- --port 5174`.
 
-## Walkthrough preparation
-
-See [docs/TECHNICAL_WALKTHROUGH.md](docs/TECHNICAL_WALKTHROUGH.md) for a natural presentation script, recommended files to open, verified demonstrations, and a final recording checklist.
